@@ -1,0 +1,155 @@
+html, body {
+  padding: 0;
+  margin: 0;
+
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+h1 {
+  pointer-events: none;
+}
+
+#h1-after {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  left: 0;
+  top: 46px;
+
+  pointer-events: none;
+  background-color: #ff9500;
+  opacity: 0;
+
+  will-change: opacity;
+  transition: opacity 0.25s linear;
+}
+
+#h1-after.new {
+  opacity: 1;
+}
+
+button {
+  position: absolute;
+  display: block;
+  top: 0;
+  right: 0;
+  height: 50px;
+
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  background: none;
+  padding: 0 15px;
+
+  text-align: center;
+  text-decoration: underline;
+  font-size: 14px;
+  color: #ffffff;
+
+  z-index: 12;
+  -moz-appearance: none;
+
+  opacity: 1;
+  transition: opacity 0.25s linear;
+}
+
+button:active {
+  opacity: 0.5;
+}
+
+button.transitioning {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+ul li {
+  position: absolute;
+  left: 0;
+
+  width: calc(100% - 20px);
+  background: white;
+  -moz-user-select: none;
+
+  display: none;
+}
+
+li.viewport {
+  display: block;
+}
+
+li.new {
+  transform: translateX(-100%);
+}
+
+.slide-in {
+  animation: slide-in 0.6s ease 0s 1 normal both;
+}
+
+@keyframes slide-in {
+  0%   { transform: translateX(-100%);}
+  100% { transform: translateX(0);}
+}
+
+li .overlay {
+  position: absolute;
+  top: 1px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 2px);
+
+  background: rgba(255, 255, 255, 0.7);
+
+  opacity: 0;
+  transition: opacity 0.3s linear;
+}
+
+li.new .overlay {
+  transition: none;
+}
+
+li.edit .overlay {
+  opacity: 1;
+}
+
+li.edit.viewport {
+  will-change: transform;
+}
+
+.overlay .cursor {
+  margin: 17px auto;
+  padding: 0;
+  width: 50px;
+  height: 50px;
+
+  text-align: center;
+  line-height: 50px;
+  font-size: 25px;
+  color: #0b0b0b;
+
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  -moz-user-select: none;
+}
+
+li.dragging {
+  z-index: 1000;
+  transition: transform 0s linear;
+}
+
+li.dragging .overlay {
+  opacity: 0;
+}
+
+section {
+  position: absolute;
+  top: 50px;
+  width: 100%;
+  height: calc(100% - 50px);
+
+  background: white;
+
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
