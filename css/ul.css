@@ -6,25 +6,24 @@ ul {
 
 ul li {
   margin: 0;
-  padding: 6px;
+  padding: 0;
+  background: white;
   border-bottom: 1px #bcbcbc solid;
   overflow: hidden;
 }
 
-ul li:last-child {
-  border-bottom: 0;
-}
-
 ul li h3 {
   margin: 0;
-  padding: 3px 0;
+  padding: 9px 6px 3px 6px;
+  background: white;
 
   color: #424242;
 }
 
 ul li p {
   margin: 0;
-  padding: 3px 0;
+  padding: 3px 6px 10px 6px;
+  background: white;
 
   color: #797979;
 }
