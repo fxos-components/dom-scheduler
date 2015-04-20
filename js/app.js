@@ -1,6 +1,7 @@
 (function() {
+  const debug = false;
   const headerHeight = 50;
-  const viewPortMultiplier = 5;
+  const maxItemCount = 25;
 
   const listSize = 1042;
   var content = [];
@@ -10,7 +11,8 @@
 
   function makeContent(prefix) {
     return {
-      title: prefix + ' Bacon ipsum dolor ' + Date.now().toString().slice(7, -1),
+      title: prefix + ' Bacon ipsum dolor ' +
+             Date.now().toString().slice(7, -1),
       body: 'Turkey biltong pig boudin kevin filet de mignon drums ' + i + '.'
     }
   }
@@ -18,9 +20,6 @@
   window.addEventListener('load', function() {
     var template = document.getElementById('template');
     var itemHeight = template.offsetHeight;
-    var maxItemCount = Math.ceil(window.innerHeight *
-                                 (viewPortMultiplier + 2) /
-                                 itemHeight);
 
     template.remove();
     template.removeAttribute('id');
@@ -30,7 +29,12 @@
     var editMode = false;
     var listContainer = document.querySelector('section');
     var list = document.querySelector('ul');
+
+    var previousTop = 0;
     var topPosition = 0;
+    var previousTimestamp = Date.now();
+    var topTimestamp = Date.now();
+    var viewPortHeight = window.innerHeight;
     var forward = true;
 
     function populateItem(item, index) {
@@ -53,6 +57,7 @@
     maestro.mutation(() => {
       updateListSize();
       placeItems();
+      updateViewportItems();
       updateHeader();
     });
 
@@ -62,25 +67,20 @@
     }
 
     function placeItems() {
-      updateVisibleItems(1);
-      setTimeout(updateVisibleItems.bind(null, viewPortMultiplier));
+      updateVisibleItems(0, itemHeight * maxItemCount);
     }
 
-    window.addEventListener('resize', placeItems);
+    window.addEventListener('resize', function() {
+      viewPortHeight = window.innerHeight;
+    });
 
-    function updateVisibleItems(multiplier) {
-      var scrollPortHeight = window.innerHeight - headerHeight;
-      var displayPortPrerender = multiplier * scrollPortHeight;
+    function updateVisibleItems(top, height) {
+      top = top || topPosition;
+      height = height || viewPortHeight;
 
-      var startIndex = Math.max(0,
-        Math.floor((topPosition -
-                    (forward ? scrollPortHeight : displayPortPrerender)) /
-                    itemHeight));
-
-      var endIndex = Math.min(content.length,
-        Math.ceil((topPosition + scrollPortHeight +
-                   (forward ? displayPortPrerender : scrollPortHeight)) /
-                   itemHeight));
+      var startIndex = Math.max(0, Math.floor(top / itemHeight));
+      var endIndex = Math.min(content.length - 1, Math.ceil((top + height) /
+                                                        itemHeight));
 
       var recyclableItems = [];
       for (var i in items) {
@@ -94,11 +94,11 @@
       function distanceFromDisplayPort(i) {
         return i < startIndex ? startIndex - 1 - i : i - endIndex;
       }
-      recyclableItems.sort(function (a,b) {
+      recyclableItems.sort(function(a, b) {
         return distanceFromDisplayPort(a) - distanceFromDisplayPort(b);
       });
 
-      for (var i = startIndex; i < endIndex; ++i) {
+      for (var i = startIndex; i <= endIndex; ++i) {
         var item = items[i];
 
         if (!item) {
@@ -128,20 +128,71 @@
           resetTransform(item);
         }
       }
+
+      /* ASCII Art viewport debugging */
+      if (debug) {
+        var str = "";
+        for (var i = 0; i < content.length; i++) {
+          if (i == startIndex) {
+            str += "|";
+          }
+          if (items[i]) {
+            str += "x";
+          } else {
+            str += "-";
+          }
+          if (i == endIndex) {
+            str += "|";
+          }
+        }
+        console.log(str)
+      }
     }
 
+    function updateViewportItems() {
+      return maestro.mutation(() => {
+        var startIndex = Math.max(0, Math.floor(topPosition / itemHeight) - 1);
+        var endIndex = Math.min(content.length - 1,
+                               ((topPosition + viewPortHeight) /
+                               itemHeight) + 1);
+
+        for (var i in items) {
+          var item = items[i];
+          item.classList.toggle('viewport', i >= startIndex && i <= endIndex);
+        }
+      });
+    }
+
+    window.addEventListener('scrollend', updateViewportItems);
+
     listContainer.addEventListener('scroll', function(evt) {
-      var previousTopPosition = topPosition;
-      topPosition = listContainer.scrollTop;
-
-      if ((topPosition - previousTopPosition) < 0) {
-        forward = false;
-      } else {
-        forward = true;
-      }
-
+      var lagTimestamp = Date.now();
       maestro.live(() => {
-        placeItems();
+        previousTop = topPosition;
+        previousTimestamp = topTimestamp;
+        topPosition = listContainer.scrollTop;
+        topTimestamp = Date.now()
+
+        var speed = (topPosition - previousTop) /
+                    (topTimestamp - previousTimestamp);
+        var lag = Date.now() - lagTimestamp;
+        var offset = speed * lag;
+
+        if ((forward && offset > 0) ||
+            (!forward && offset < 0)) {
+          topPosition += offset;
+        }
+
+        forward = ((topPosition - previousTop) > 0);
+
+        var vpTop = topPosition;
+        var vpHeight = viewPortHeight * 2;
+
+        if (!forward) {
+          vpTop -= viewPortHeight;
+        }
+
+        updateVisibleItems(vpTop, vpHeight);
         updateNewIndicator();
       });
     });
@@ -149,7 +200,7 @@
     function updateNewIndicator() {
       var h1After = document.querySelector('#h1-after');
 
-      if (topPosition === 0 && h1After.classList.contains('new')) {
+      if (topPosition <= 0 && h1After.classList.contains('new')) {
         maestro.transition(() => {
           h1After.classList.remove('new');
         }, h1After, 'transitionend');
@@ -157,19 +208,28 @@
     }
 
     // New stuff coming in every 15sec
-    setInterval(() => {
+    function newContentHandler() {
       if ((topPosition > 0) || editMode) {
         // No transition needed, just keep the scroll position
         insertOnTop(true);
         return;
       }
 
-      pushDown()
+      updateViewportItems()
+        .then(pushDown)
         .then(insertOnTop.bind(null, false))
         .then(cleanInlineStyles)
-        .then(slideIn);
+        .then(updateViewportItems)
+        .then(slideIn)
+    }
 
-    }, 15000);
+    setInterval(newContentHandler, 15000);
+    window.addEventListener('new-content', newContentHandler);
+
+    window.pushNewContent = function() {
+      var start = performance.now();
+      window.dispatchEvent(new CustomEvent('new-content'));
+    };
 
     function pushDown() {
       if (!itemsInDOM.length) {
@@ -229,8 +289,7 @@
           }, h1After, 'transitionend');
         }
 
-        updateVisibleItems(1);
-
+        updateVisibleItems();
         updateHeader();
       });
     }
@@ -267,7 +326,9 @@
     function changeEditMode(text, toggleEditClass) {
       var update = updateText.bind(null, text);
 
-      Promise.all([toggleTransitioning(), toggleEditClass()])
+      toggleTransitioning()
+        .then(updateViewportItems)
+        .then(toggleEditClass)
         .then(update)
         .then(toggleTransitioning);
     }
@@ -314,7 +375,7 @@
     function resetTransform(item) {
       var position = parseInt(item.dataset.position);
       if (item.dataset.toSlide) {
-        item.style.transform = 'translate(-100%, ' + position + 'px)';
+        item.style.transform = 'translate(-99.9%, ' + position + 'px)';
       } else {
         item.style.transform = 'translate(0, ' + position + 'px)';
       }
