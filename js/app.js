@@ -215,7 +215,7 @@
 
     // New stuff coming in every 15sec
     function newContentHandler() {
-      if ((topPosition > 0) || editMode) {
+      if ((topPosition > itemHeight) || editMode) {
         // No transition needed, just keep the scroll position
         insertOnTop(true);
         return;
