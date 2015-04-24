@@ -70,22 +70,10 @@ ul li {
   height: 87px;
   box-sizing: border-box;
   -moz-user-select: none;
-
-  /* XXX: gecko work ongoing by Vivien */
-  /*will-change: ignore;*/
 }
 
-li.new {
-  transform: translateX(-100%);
-}
-
-.slide-in {
-  animation: slide-in 0.6s ease 0s 1 normal both;
-}
-
-@keyframes slide-in {
-  0%   { transform: translateX(-100%);}
-  100% { transform: translateX(0);}
+li.viewport {
+  will-change: transform;
 }
 
 li .overlay {
@@ -127,8 +115,8 @@ li.edit .overlay {
 
 li.dragging {
   z-index: 1000;
-  will-change: transform;
   transition: transform 0s linear;
+  -webkit-transition: -webkit-transform 0s linear;
 }
 
 li.dragging .overlay {
@@ -143,4 +131,5 @@ section {
 
   overflow-x: hidden;
   overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
 }

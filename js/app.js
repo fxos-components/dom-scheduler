@@ -1,8 +1,9 @@
 (function() {
-  const headerHeight = 50;
-  const viewPortMultiplier = 5;
+  var debug = false;
+  var headerHeight = 50;
+  var maxItemCount = 25;
 
-  const listSize = 1042;
+  var listSize = 1042;
   var content = [];
   for (var i = 0; i < listSize; i++) {
     content.push(makeContent(i));
@@ -10,7 +11,8 @@
 
   function makeContent(prefix) {
     return {
-      title: prefix + ' Bacon ipsum dolor ' + Date.now().toString().slice(7, -1),
+      title: prefix + ' Bacon ipsum dolor ' +
+             Date.now().toString().slice(7, -1),
       body: 'Turkey biltong pig boudin kevin filet de mignon drums ' + i + '.'
     }
   }
@@ -18,9 +20,6 @@
   window.addEventListener('load', function() {
     var template = document.getElementById('template');
     var itemHeight = template.offsetHeight;
-    var maxItemCount = Math.ceil(window.innerHeight *
-                                 (viewPortMultiplier + 2) /
-                                 itemHeight);
 
     template.remove();
     template.removeAttribute('id');
@@ -30,7 +29,12 @@
     var editMode = false;
     var listContainer = document.querySelector('section');
     var list = document.querySelector('ul');
+
+    var previousTop = 0;
     var topPosition = 0;
+    var previousTimestamp = Date.now();
+    var topTimestamp = Date.now();
+    var viewPortHeight = window.innerHeight;
     var forward = true;
 
     function populateItem(item, index) {
@@ -50,9 +54,10 @@
     }
 
     // Initial load
-    maestro.mutation(() => {
+    maestro.mutation(function() {
       updateListSize();
       placeItems();
+      updateViewportItems();
       updateHeader();
     });
 
@@ -62,43 +67,43 @@
     }
 
     function placeItems() {
-      updateVisibleItems(1);
-      setTimeout(updateVisibleItems.bind(null, viewPortMultiplier));
+      updateVisibleItems(0, itemHeight * maxItemCount);
     }
 
-    window.addEventListener('resize', placeItems);
+    window.addEventListener('resize', function() {
+      viewPortHeight = window.innerHeight;
+    });
 
-    function updateVisibleItems(multiplier) {
-      var scrollPortHeight = window.innerHeight - headerHeight;
-      var displayPortPrerender = multiplier * scrollPortHeight;
-
-      var startIndex = Math.max(0,
-        Math.floor((topPosition -
-                    (forward ? scrollPortHeight : displayPortPrerender)) /
-                    itemHeight));
-
-      var endIndex = Math.min(content.length,
-        Math.ceil((topPosition + scrollPortHeight +
-                   (forward ? displayPortPrerender : scrollPortHeight)) /
-                   itemHeight));
-
+    function recycle(startIndex, endIndex) {
       var recyclableItems = [];
       for (var i in items) {
         if (i < startIndex || i >= endIndex) {
           recyclableItems.push(i);
         }
       }
+      return recyclableItems;
+    }
+
+    function updateVisibleItems(top, height) {
+      top = top || topPosition;
+      height = height || viewPortHeight;
+
+      var startIndex = Math.max(0, Math.floor(top / itemHeight));
+      var endIndex = Math.min(content.length - 1, Math.ceil((top + height) /
+                                                        itemHeight));
+
+      var recyclableItems = recycle(startIndex, endIndex);
 
       // Put the items that are furthest away from the displayport at the end of
       // the array.
       function distanceFromDisplayPort(i) {
         return i < startIndex ? startIndex - 1 - i : i - endIndex;
       }
-      recyclableItems.sort(function (a,b) {
+      recyclableItems.sort(function(a, b) {
         return distanceFromDisplayPort(a) - distanceFromDisplayPort(b);
       });
 
-      for (var i = startIndex; i < endIndex; ++i) {
+      for (var i = startIndex; i <= endIndex; ++i) {
         var item = items[i];
 
         if (!item) {
@@ -122,26 +127,78 @@
 
         var tweakedBy = item.dataset.tweakDelta;
         if (tweakedBy) {
-          item.style.transform = 'translate(0, ' + (i * itemHeight +
-                                                  parseInt(tweakedBy)) + 'px)';
+          item.style.webkitTransform =
+            item.style.transform = 'translate3d(0, ' + (i * itemHeight +
+                                   parseInt(tweakedBy)) + 'px, 0)';
         } else  {
           resetTransform(item);
         }
       }
+
+      /* ASCII Art viewport debugging */
+      if (debug) {
+        var str = "";
+        for (var i = 0; i < content.length; i++) {
+          if (i == startIndex) {
+            str += "|";
+          }
+          if (items[i]) {
+            str += "x";
+          } else {
+            str += "-";
+          }
+          if (i == endIndex) {
+            str += "|";
+          }
+        }
+        console.log(str)
+      }
     }
 
+    function updateViewportItems() {
+      return maestro.mutation(function() {
+        var startIndex = Math.max(0, Math.floor(topPosition / itemHeight) - 1);
+        var endIndex = Math.min(content.length - 1,
+                               ((topPosition + viewPortHeight) /
+                               itemHeight) + 1);
+
+        for (var i in items) {
+          var item = items[i];
+          item.classList.toggle('viewport', i >= startIndex && i <= endIndex);
+        }
+      });
+    }
+
+    window.addEventListener('scrollend', updateViewportItems);
+
     listContainer.addEventListener('scroll', function(evt) {
-      var previousTopPosition = topPosition;
-      topPosition = listContainer.scrollTop;
+      var lagTimestamp = Date.now();
+      maestro.live(function() {
+        previousTop = topPosition;
+        previousTimestamp = topTimestamp;
+        topPosition = listContainer.scrollTop;
+        topTimestamp = Date.now()
 
-      if ((topPosition - previousTopPosition) < 0) {
-        forward = false;
-      } else {
-        forward = true;
-      }
+        var speed = (topPosition - previousTop) /
+                    (topTimestamp - previousTimestamp);
+        var lag = Date.now() - lagTimestamp;
+        var offset = speed * lag;
 
-      maestro.live(() => {
-        placeItems();
+        if ((forward && offset > 0) ||
+            (!forward && offset < 0)) {
+          topPosition += offset;
+        }
+
+        forward = ((topPosition - previousTop) > 0);
+
+        var vpTop = topPosition;
+        var vpHeight = viewPortHeight * 2;
+
+        if (!forward) {
+          vpTop -= viewPortHeight;
+        }
+
+        updateVisibleItems(vpTop, vpHeight);
         updateNewIndicator();
       });
     });
@@ -149,47 +206,58 @@
     function updateNewIndicator() {
       var h1After = document.querySelector('#h1-after');
 
-      if (topPosition === 0 && h1After.classList.contains('new')) {
-        maestro.transition(() => {
+      if (topPosition <= 0 && h1After.classList.contains('new')) {
+        maestro.transition(function() {
           h1After.classList.remove('new');
         }, h1After, 'transitionend');
       }
     }
 
     // New stuff coming in every 15sec
-    setInterval(() => {
+    function newContentHandler() {
       if ((topPosition > 0) || editMode) {
         // No transition needed, just keep the scroll position
         insertOnTop(true);
         return;
       }
 
-      pushDown()
+      updateViewportItems()
+        .then(pushDown)
         .then(insertOnTop.bind(null, false))
         .then(cleanInlineStyles)
-        .then(slideIn);
+        .then(updateViewportItems)
+        .then(slideIn)
+    }
 
-    }, 15000);
+    setInterval(newContentHandler, 15000);
+    window.addEventListener('new-content', newContentHandler);
+
+    window.pushNewContent = function() {
+      var start = performance.now();
+      window.dispatchEvent(new CustomEvent('new-content'));
+    };
 
     function pushDown() {
       if (!itemsInDOM.length) {
         return Promise.resolve();
       }
 
-      return maestro.transition(() => {
+      return maestro.transition(function() {
         for (var i = 0; i < itemsInDOM.length; i++) {
           var item = itemsInDOM[i];
           item.style.transition = 'transform 0.25s ease';
+          item.style.webkitTransition = '-webkit-transform 0.25s ease';
           tweakTransform(item, itemHeight);
         }
       }, itemsInDOM[0], 'transitionend');
     }
 
     function cleanInlineStyles() {
-      return maestro.mutation(() => {
+      return maestro.mutation(function() {
         for (var i = 0; i < itemsInDOM.length; i++) {
           var item = itemsInDOM[i];
           item.style.transition = '';
+          item.style.webkitTransition = '';
           resetTransform(item);
         }
         listContainer.scrollTop; // flushing
@@ -199,20 +267,22 @@
     function slideIn() {
       var newEl = list.querySelector('li[data-to-slide]');
 
-      return maestro.transition(() => {
+      return maestro.transition(function() {
         delete newEl.dataset.toSlide;
-        setTimeout(() => {
+        setTimeout(function() {
           newEl.style.transition = 'transform 0.25s ease';
+          newEl.style.webkitTransition = '-webkit-transform 0.25s ease';
           resetTransform(newEl);
         });
-      }, newEl, 'transitionend').then(() => {
+      }, newEl, 'transitionend').then(function() {
         newEl.style.transition = '';
+        newEl.style.webkitTransition = '';
         delete content[0].toSlide;
       });
     }
 
     function insertOnTop(keepScrollPosition) {
-      return maestro.mutation(() => {
+      return maestro.mutation(function() {
         var newContent = makeContent('NEW');
         newContent.toSlide = !keepScrollPosition;
         content.unshift(newContent);
@@ -221,22 +291,21 @@
         delete items[0]; // keeping it sparse
 
         if (keepScrollPosition) {
-          listContainer.scrollBy(0, itemHeight);
+          listContainer.scrollTop += itemHeight;
 
           var h1After = document.querySelector('#h1-after');
-          maestro.transition(() => {
+          maestro.transition(function() {
             h1After.classList.add('new');
           }, h1After, 'transitionend');
         }
 
-        updateVisibleItems(1);
-
+        updateVisibleItems();
         updateHeader();
       });
     }
 
     function updateHeader() {
-      return maestro.mutation(() => {
+      return maestro.mutation(function() {
         var h1 = document.querySelector('h1');
         h1.textContent = 'Main List (' + content.length + ')';
       });
@@ -267,25 +336,27 @@
     function changeEditMode(text, toggleEditClass) {
       var update = updateText.bind(null, text);
 
-      Promise.all([toggleTransitioning(), toggleEditClass()])
+      toggleTransitioning()
+        .then(updateViewportItems)
+        .then(toggleEditClass)
         .then(update)
         .then(toggleTransitioning);
     }
 
     function updateText(text) {
-      return maestro.mutation(() => {
+      return maestro.mutation(function() {
         button.textContent = text;
       });
     }
 
     function toggleTransitioning() {
-      return maestro.transition(() => {
+      return maestro.transition(function() {
         button.classList.toggle('transitioning');
       }, button, 'transitionend', 300, true /* feedback */);
     }
 
     function toggleEditClass(on) {
-      return maestro.transition(() => {
+      return maestro.transition(function() {
         for (var i = 0; i < itemsInDOM.length; i++) {
           var item = itemsInDOM[i];
           item.classList.toggle('edit', on);
@@ -307,16 +378,19 @@
 
     function tweakTransform(item, delta) {
       var position = parseInt(item.dataset.position) + delta;
-      item.style.transform = 'translate(0, ' + position + 'px)';
+      item.style.webkitTransform =
+        item.style.transform = 'translate3d(0, ' + position + 'px, 0)';
       item.dataset.tweakDelta = delta;
     }
 
     function resetTransform(item) {
       var position = parseInt(item.dataset.position);
       if (item.dataset.toSlide) {
-        item.style.transform = 'translate(-100%, ' + position + 'px)';
+        item.style.webkitTransform =
+          item.style.transform = 'translate3d(-99.9%, ' + position + 'px, 0)';
       } else {
-        item.style.transform = 'translate(0, ' + position + 'px)';
+        item.style.webkitTransform =
+          item.style.transform = 'translate3d(0, ' + position + 'px, 0)';
       }
       delete item.dataset.tweakDelta;
     }
@@ -344,7 +418,7 @@
       var li = target.parentNode.parentNode;
       var position = evt.touches[0].pageY;
 
-      maestro.live(() => {
+      maestro.live(function() {
         if (quietTimeout) {
           clearTimeout(quietTimeout);
           quietTimeout = null;
@@ -379,10 +453,10 @@
     }
 
     function toggleDragging(li) {
-      return maestro.mutation(() => {
+      return maestro.mutation(function() {
         li.style.zIndex = li.style.zIndex ? '' : 1000;
-      }).then(() => {
-        return maestro.transition(() => {
+      }).then(function() {
+        return maestro.transition(function() {
           li.classList.toggle('dragging');
         }, li, 'transitionend');
       });
@@ -403,21 +477,22 @@
       var duration = (Math.abs(taintedPosition - newPosition) / itemHeight) * 250;
 
       li.style.transition = 'transform ' + duration + 'ms linear';
-      return maestro.transition(() => {
+      li.style.webkitTransition = '-webkit-transform ' + duration + 'ms linear';
+      return maestro.transition(function() {
         tweakTransform(li, (newPosition - position));
       }, li, 'transitionend', duration)
     }
 
     function commitToDocument(li) {
-      return maestro.mutation(() => {
+      return maestro.mutation(function() {
         var index = items.indexOf(li);
 
-        var firstDown = items.find(function(item) {
+        var firstDown = items.filter(function(item) {
           if (!item) {
             return false;
           }
           return item.dataset.taint == 'down';
-        });
+        })[0];
         if (firstDown) {
           items.splice(index, 1);
           var c = content.splice(index, 1)[0];
@@ -445,6 +520,7 @@
 
         itemsInDOM.forEach(function(item) {
           item.style.transition = '';
+          item.style.webkitTransition = '';
           resetTransform(item);
           delete item.dataset.taint;
         });
@@ -513,9 +589,10 @@
           return
         }
 
-        maestro.transition(() => {
+        maestro.transition(function() {
           work.items.forEach(function(item) {
             item.style.transition = 'transform 0.25s ease';
+            item.style.webkitTransition = '-webkit-transform 0.25s ease';
             tweakTransform(item, work.transform);
             if (!work.taint) {
               delete item.dataset.taint;
@@ -523,9 +600,10 @@
               item.dataset.taint = work.taint;
             }
           });
-        }, work.items[0], 'transitionend').then(() => {
+        }, work.items[0], 'transitionend').then(function() {
           work.items.forEach(function(item) {
             item.style.transition = '';
+            item.style.webkitTransition = '';
           });
         });
       });
