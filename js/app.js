@@ -1,7 +1,7 @@
 (function() {
   var debug = false;
   var headerHeight = 50;
-  var maxItemCount = 25;
+  var maxItemCount = 28;
 
   var listSize = 1042;
   var content = [];
@@ -34,7 +34,7 @@
     var topPosition = 0;
     var previousTimestamp = Date.now();
     var topTimestamp = Date.now();
-    var viewPortHeight = window.innerHeight;
+    var viewPortHeight = window.innerHeight - headerHeight;
     var forward = true;
 
     function populateItem(item, index) {
@@ -67,17 +67,17 @@
     }
 
     function placeItems() {
-      updateVisibleItems(0, itemHeight * maxItemCount);
+      updateVisibleItems(0, maxItemCount * itemHeight);
     }
 
     window.addEventListener('resize', function() {
-      viewPortHeight = window.innerHeight;
+      viewPortHeight = window.innerHeight - headerHeight;
     });
 
-    function recycle(startIndex, endIndex) {
+    function recycle(startIndex, criticalEnd) {
       var recyclableItems = [];
       for (var i in items) {
-        if (i < startIndex || i >= endIndex) {
+        if ((i < startIndex) || (i > criticalEnd)) {
           recyclableItems.push(i);
         }
       }
@@ -88,19 +88,31 @@
       top = top || topPosition;
       height = height || viewPortHeight;
 
-      var startIndex = Math.max(0, Math.floor(top / itemHeight));
-      var endIndex = Math.min(content.length - 1, Math.ceil((top + height) /
-                                                        itemHeight));
+      var prerenderCount = Math.floor((maxItemCount * itemHeight -
+                                      viewPortHeight) / itemHeight) - 2;
 
-      var recyclableItems = recycle(startIndex, endIndex);
+      var startIndex = Math.max(0, Math.floor(top / itemHeight));
+      var criticalEnd = Math.min(content.length - 1,
+                                 Math.ceil((top + viewPortHeight) /
+                                           itemHeight));
+
+      var recyclableItems = recycle(startIndex, criticalEnd);
+
+      var endIndex = criticalEnd;
+      if (forward) {
+        endIndex = Math.min(content.length - 1, criticalEnd + prerenderCount);
+      } else {
+        startIndex = Math.max(0, startIndex - prerenderCount);
+      }
 
       // Put the items that are furthest away from the displayport at the end of
       // the array.
-      function distanceFromDisplayPort(i) {
-        return i < startIndex ? startIndex - 1 - i : i - endIndex;
+      var actionIndex = forward ? endIndex : startIndex;
+      function distanceFromAction(i) {
+        return Math.abs(i - actionIndex);
       }
       recyclableItems.sort(function(a, b) {
-        return distanceFromDisplayPort(a) - distanceFromDisplayPort(b);
+        return distanceFromAction(a) - distanceFromAction(b);
       });
 
       for (var i = startIndex; i <= endIndex; ++i) {
@@ -117,6 +129,7 @@
             itemsInDOM.push(item);
           } else {
             // Probably scrolling too fast anyway, bailing out
+            console.warn('missing a cell');
             continue;
           }
           populateItem(item, i);
@@ -137,18 +150,18 @@
 
       /* ASCII Art viewport debugging */
       if (debug) {
-        var str = "";
+        var str = '[' + forward + ']';
         for (var i = 0; i < content.length; i++) {
           if (i == startIndex) {
-            str += "|";
+            str += '|';
           }
           if (items[i]) {
-            str += "x";
+            str += 'x';
           } else {
-            str += "-";
+            str += '-';
           }
           if (i == endIndex) {
-            str += "|";
+            str += '|';
           }
         }
         console.log(str)
@@ -172,31 +185,20 @@
     window.addEventListener('scrollend', updateViewportItems);
 
     listContainer.addEventListener('scroll', function(evt) {
-      var lagTimestamp = Date.now();
       maestro.live(function() {
         previousTop = topPosition;
-        previousTimestamp = topTimestamp;
         topPosition = listContainer.scrollTop;
-        topTimestamp = Date.now()
 
-        var speed = (topPosition - previousTop) /
-                    (topTimestamp - previousTimestamp);
-        var lag = Date.now() - lagTimestamp;
-        var offset = speed * lag;
-
-        if ((forward && offset > 0) ||
-            (!forward && offset < 0)) {
-          topPosition += offset;
+        if ((topPosition - previousTop) > 2) {
+          forward = true;
         }
 
-        forward = ((topPosition - previousTop) > 0);
+        if ((topPosition - previousTop) < -2) {
+          forward = false;
+        }
 
         var vpTop = topPosition;
-        var vpHeight = viewPortHeight * 2;
-
-        if (!forward) {
-          vpTop -= viewPortHeight;
-        }
+        var vpHeight = maxItemCount * itemHeight;
 
         updateVisibleItems(vpTop, vpHeight);
         updateNewIndicator();
