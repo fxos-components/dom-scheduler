@@ -18,6 +18,8 @@
   }
 
   window.addEventListener('load', function() {
+    var maestro = new DomScheduler();
+
     var template = document.getElementById('template');
     var itemHeight = template.offsetHeight;
 
@@ -318,10 +320,8 @@
     button.addEventListener('click', function() {
       if (editMode) {
         exitEditMode();
-        editMode = false;
       } else {
         enterEditMode();
-        editMode = true;
       }
     });
 
@@ -359,6 +359,7 @@
 
     function toggleEditClass(on) {
       return maestro.transition(function() {
+        editMode = on;
         for (var i = 0; i < itemsInDOM.length; i++) {
           var item = itemsInDOM[i];
           item.classList.toggle('edit', on);
