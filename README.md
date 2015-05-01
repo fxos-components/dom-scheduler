@@ -71,16 +71,16 @@ scheduling and compare.)_
 
 ## API
 
-### Live blocks
-`scheduler.live(block)`
+### Direct blocks
+`scheduler.direct(block)`
 
-Live blocks should be used for direct manipulation (touchevents,
+Direct blocks should be used for direct manipulation (touchevents,
 scrollevents...). As such they have the highest priority.
 
 #### Example
 ```javascript
 el.addEventListener('touchmove', (evt) => {
-  scheduler.live(() => {
+  scheduler.direct(() => {
     el.style.transform = computeTransform(evt);
   });
 });
@@ -96,7 +96,7 @@ return a promise fulfilled once `evt` is received or after `timeout` for
 chaining.
 
 If the `feedback` flag is set the block will have the same priority than
-a direct manipulation _live_ block.
+a _direct_ manipulation block.
 
 #### Example
 ```javascript
@@ -113,7 +113,7 @@ scheduler.transition(() => {
 `scheduler.mutation(block)`
 
 Mutations blocks should be used to write to the DOM or perform
-non-live actions requiring a re-layout of the page.
+actions requiring a reflow that are not direct manipulations.
 
 **We shoud always aim for the document to be almost visually identical
 _before_ and _after_ a mutation block.
@@ -130,8 +130,8 @@ maestro.mutation(() => {
 ```
 
 ## Scheduling heuristics (TBD)
-  - `live` blocks are encapsulated into `requestAnimationFrame`
-  - `live` blocks and `feedback transition` blocks have the highest
+  - `direct` blocks are encapsulated into `requestAnimationFrame`
+  - `direct` blocks and `feedback transition` blocks have the highest
     priority and delay the rest
   - `transition` delays mutations
   - transitions are postponed while delayed mutations are being flushed

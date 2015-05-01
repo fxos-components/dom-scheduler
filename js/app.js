@@ -187,7 +187,7 @@
     window.addEventListener('scrollend', updateViewportItems);
 
     listContainer.addEventListener('scroll', function(evt) {
-      maestro.live(function() {
+      maestro.direct(function() {
         previousTop = topPosition;
         topPosition = listContainer.scrollTop;
 
@@ -421,7 +421,7 @@
       var li = target.parentNode.parentNode;
       var position = evt.touches[0].pageY;
 
-      maestro.live(function() {
+      maestro.direct(function() {
         if (quietTimeout) {
           clearTimeout(quietTimeout);
           quietTimeout = null;
