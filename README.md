@@ -138,9 +138,8 @@ maestro.mutation(() => {
 
 ## Tests
 
-1. Ensure Firefox Nightly is installed on your machine.
-2. `$ npm install`
-3. `$ npm test`
+1. `$ npm install`
+2. `$ npm test`
 
 If your would like tests to run on file change use:
 
