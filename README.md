@@ -135,3 +135,18 @@ maestro.mutation(() => {
     priority and delay the rest
   - `transition` delays mutations
   - transitions are postponed while delayed mutations are being flushed
+
+## Tests
+
+1. `$ npm install`
+2. `$ npm test`
+
+If your would like tests to run on file change use:
+
+`$ npm run test-dev`
+
+## Lint check
+
+Run lint check with command:
+
+`$ npm run lint`
