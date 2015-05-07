@@ -3,20 +3,6 @@
   var headerHeight = 50;
   var maxItemCount = 28;
 
-  var listSize = 1042;
-  var content = [];
-  for (var i = 0; i < listSize; i++) {
-    content.push(makeContent(i));
-  }
-
-  function makeContent(prefix) {
-    return {
-      title: prefix + ' Bacon ipsum dolor ' +
-             Date.now().toString().slice(7, -1),
-      body: 'Turkey biltong pig boudin kevin filet de mignon drums ' + i + '.'
-    }
-  }
-
   window.addEventListener('load', function() {
     var maestro = new DomScheduler();
 
@@ -42,7 +28,7 @@
     function populateItem(item, index) {
       var title = item.firstChild;
       var body = title.nextSibling;
-      var record = content[index];
+      var record = datasource.recordAtIndex(index);
 
       title.firstChild.data = record.title;
       body.firstChild.data = record.body;
@@ -65,7 +51,7 @@
 
     // Virtual-List management
     function updateListSize() {
-      list.style.height = content.length * itemHeight + 'px';
+      list.style.height = datasource.fullHeight() + 'px';
     }
 
     function placeItems() {
@@ -93,16 +79,15 @@
       var prerenderCount = Math.floor((maxItemCount * itemHeight -
                                       viewPortHeight) / itemHeight) - 2;
 
-      var startIndex = Math.max(0, Math.floor(top / itemHeight));
-      var criticalEnd = Math.min(content.length - 1,
-                                 Math.ceil((top + viewPortHeight) /
-                                           itemHeight));
+      var startIndex = datasource.indexAtPosition(top);
+      var criticalEnd = datasource.indexAtPosition(top + viewPortHeight);
 
       var recyclableItems = recycle(startIndex, criticalEnd);
 
       var endIndex = criticalEnd;
       if (forward) {
-        endIndex = Math.min(content.length - 1, criticalEnd + prerenderCount);
+        endIndex = Math.min(datasource.fullLength() - 1,
+                            criticalEnd + prerenderCount);
       } else {
         startIndex = Math.max(0, startIndex - prerenderCount);
       }
@@ -153,7 +138,7 @@
       /* ASCII Art viewport debugging */
       if (debug) {
         var str = '[' + forward + ']';
-        for (var i = 0; i < content.length; i++) {
+        for (var i = 0; i < datasource.fullLength(); i++) {
           if (i == startIndex) {
             str += '|';
           }
@@ -173,7 +158,7 @@
     function updateViewportItems() {
       return maestro.mutation(function() {
         var startIndex = Math.max(0, Math.floor(topPosition / itemHeight) - 1);
-        var endIndex = Math.min(content.length - 1,
+        var endIndex = Math.min(datasource.fullLength() - 1,
                                ((topPosition + viewPortHeight) /
                                itemHeight) + 1);
 
@@ -281,18 +266,25 @@
       }, newEl, 'transitionend').then(function() {
         newEl.style.transition = '';
         newEl.style.webkitTransition = '';
-        delete content[0].toSlide;
+        var rec = datasource.recordAtIndex(0);
+        delete rec.toSlide;
+        datasource.replaceAtIndex(0, rec);
       });
     }
 
     function insertOnTop(keepScrollPosition) {
       return maestro.mutation(function() {
-        var newContent = makeContent('NEW');
-        newContent.toSlide = !keepScrollPosition;
-        content.unshift(newContent);
+        var newContent = {
+          title: 'NEW Bacon ' + Date.now().toString().slice(7, -1),
+          body: 'Turkey BLT please.',
+          toSlide: !keepScrollPosition
+        };
+        datasource.insertAtIndex(0, newContent);
 
         items.unshift(null);
         delete items[0]; // keeping it sparse
+
+        updateListSize();
 
         if (keepScrollPosition) {
           listContainer.scrollTop += itemHeight;
@@ -311,7 +303,7 @@
     function updateHeader() {
       return maestro.mutation(function() {
         var h1 = document.querySelector('h1');
-        h1.textContent = 'Main List (' + content.length + ')';
+        h1.textContent = 'Main List (' + datasource.fullLength() + ')';
       });
     }
 
@@ -498,10 +490,10 @@
         })[0];
         if (firstDown) {
           items.splice(index, 1);
-          var c = content.splice(index, 1)[0];
+          var c = datasource.removeAtIndex(index)
           var newIndex = items.indexOf(firstDown);
           items.splice(newIndex, 0, li);
-          content.splice(newIndex, 0, c);
+          datasource.insertAtIndex(newIndex, c);
         }
 
         var ups = items.filter(function(item) {
@@ -513,10 +505,10 @@
         var lastUp = ups.length && ups[ups.length - 1];
         if (lastUp) {
           var nextIndex = items.indexOf(lastUp);
-          var c = content.splice(index, 1)[0];
+          var c = datasource.removeAtIndex(index);
           items.splice(index, 1);
           items.splice(nextIndex, 0, li);
-          content.splice(nextIndex, 0, c);
+          datasource.insertAtIndex(nextIndex, c)
         }
 
         delete li.dataset.taintedPosition;
