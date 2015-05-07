@@ -117,7 +117,7 @@ suite('DomScheduler', function() {
         .then(function() {
           sinon.assert.calledOnce(spy);
           done();
-        })
+        });
     });
   });
 });
