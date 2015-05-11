@@ -157,8 +157,6 @@
       });
     }
 
-    window.addEventListener('scrollend', updateViewportItems);
-
     listContainer.addEventListener('scroll', function(evt) {
       maestro.direct(function() {
         previousTop = topPosition;
