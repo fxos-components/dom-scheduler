@@ -5,6 +5,7 @@
 
   window.addEventListener('load', function() {
     var maestro = new DomScheduler();
+    var source = new BaconSource();
 
     var template = document.getElementById('template');
     var itemHeight = template.offsetHeight;
@@ -25,22 +26,6 @@
     var viewPortHeight = window.innerHeight - headerHeight;
     var forward = true;
 
-    function populateItem(item, index) {
-      var title = item.firstChild;
-      var body = title.nextSibling;
-      var record = datasource.recordAtIndex(index);
-
-      title.firstChild.data = record.title;
-      body.firstChild.data = record.body;
-
-      item.classList.toggle('edit', editMode);
-      if (record.toSlide) {
-        item.dataset.toSlide = true;
-      } else if (item.dataset.toSlide) {
-        delete item.dataset.toSlide;
-      }
-    }
-
     // Initial load
     maestro.mutation(function() {
       updateListSize();
@@ -51,7 +36,7 @@
 
     // Virtual-List management
     function updateListSize() {
-      list.style.height = datasource.fullHeight() + 'px';
+      list.style.height = source.fullHeight() + 'px';
     }
 
     function placeItems() {
@@ -79,14 +64,14 @@
       var prerenderCount = Math.floor((maxItemCount * itemHeight -
                                       viewPortHeight) / itemHeight) - 2;
 
-      var startIndex = datasource.indexAtPosition(top);
-      var criticalEnd = datasource.indexAtPosition(top + viewPortHeight);
+      var startIndex = source.indexAtPosition(top);
+      var criticalEnd = source.indexAtPosition(top + viewPortHeight);
 
       var recyclableItems = recycle(startIndex, criticalEnd);
 
       var endIndex = criticalEnd;
       if (forward) {
-        endIndex = Math.min(datasource.fullLength() - 1,
+        endIndex = Math.min(source.fullLength() - 1,
                             criticalEnd + prerenderCount);
       } else {
         startIndex = Math.max(0, startIndex - prerenderCount);
@@ -119,7 +104,10 @@
             console.warn('missing a cell');
             continue;
           }
-          populateItem(item, i);
+
+          source.populateItem(item, i);
+          item.classList.toggle('edit', editMode);
+
           items[i] = item;
         }
 
@@ -138,7 +126,7 @@
       /* ASCII Art viewport debugging */
       if (debug) {
         var str = '[' + forward + ']';
-        for (var i = 0; i < datasource.fullLength(); i++) {
+        for (var i = 0; i < source.fullLength(); i++) {
           if (i == startIndex) {
             str += '|';
           }
@@ -158,7 +146,7 @@
     function updateViewportItems() {
       return maestro.mutation(function() {
         var startIndex = Math.max(0, Math.floor(topPosition / itemHeight) - 1);
-        var endIndex = Math.min(datasource.fullLength() - 1,
+        var endIndex = Math.min(source.fullLength() - 1,
                                ((topPosition + viewPortHeight) /
                                itemHeight) + 1);
 
@@ -222,7 +210,6 @@
     window.addEventListener('new-content', newContentHandler);
 
     window.pushNewContent = function() {
-      var start = performance.now();
       window.dispatchEvent(new CustomEvent('new-content'));
     };
 
@@ -266,9 +253,9 @@
       }, newEl, 'transitionend').then(function() {
         newEl.style.transition = '';
         newEl.style.webkitTransition = '';
-        var rec = datasource.recordAtIndex(0);
+        var rec = source.recordAtIndex(0);
         delete rec.toSlide;
-        datasource.replaceAtIndex(0, rec);
+        source.replaceAtIndex(0, rec);
       });
     }
 
@@ -279,7 +266,7 @@
           body: 'Turkey BLT please.',
           toSlide: !keepScrollPosition
         };
-        datasource.insertAtIndex(0, newContent);
+        source.insertAtIndex(0, newContent);
 
         items.unshift(null);
         delete items[0]; // keeping it sparse
@@ -303,7 +290,7 @@
     function updateHeader() {
       return maestro.mutation(function() {
         var h1 = document.querySelector('h1');
-        h1.textContent = 'Main List (' + datasource.fullLength() + ')';
+        h1.textContent = 'Main List (' + source.fullLength() + ')';
       });
     }
 
@@ -490,10 +477,10 @@
         })[0];
         if (firstDown) {
           items.splice(index, 1);
-          var c = datasource.removeAtIndex(index)
+          var c = source.removeAtIndex(index)
           var newIndex = items.indexOf(firstDown);
           items.splice(newIndex, 0, li);
-          datasource.insertAtIndex(newIndex, c);
+          source.insertAtIndex(newIndex, c);
         }
 
         var ups = items.filter(function(item) {
@@ -505,10 +492,10 @@
         var lastUp = ups.length && ups[ups.length - 1];
         if (lastUp) {
           var nextIndex = items.indexOf(lastUp);
-          var c = datasource.removeAtIndex(index);
+          var c = source.removeAtIndex(index);
           items.splice(index, 1);
           items.splice(nextIndex, 0, li);
-          datasource.insertAtIndex(nextIndex, c)
+          source.insertAtIndex(nextIndex, c)
         }
 
         delete li.dataset.taintedPosition;
