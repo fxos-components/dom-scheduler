@@ -141,7 +141,7 @@ maestro.mutation(() => {
 1. `$ npm install`
 2. `$ npm test`
 
-If your would like tests to run on file change use:
+If you would like tests to run on file change use:
 
 `$ npm run test-dev`
 
