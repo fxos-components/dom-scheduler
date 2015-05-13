@@ -4,189 +4,33 @@
   var maxItemCount = 28;
 
   window.addEventListener('load', function() {
+    var listContainer = document.querySelector('section');
+
     var maestro = new DomScheduler();
     var source = new BaconSource();
+    var list = new ScheduledList(listContainer, source, maestro);
 
-    var template = document.getElementById('template');
-    var itemHeight = template.offsetHeight;
-
-    template.remove();
-    template.removeAttribute('id');
-
-    var items = [];
-    var itemsInDOM = [];
-    var editMode = false;
-    var listContainer = document.querySelector('section');
-    var list = document.querySelector('ul');
-
-    var previousTop = 0;
-    var topPosition = 0;
-    var previousTimestamp = Date.now();
-    var topTimestamp = Date.now();
-    var viewPortHeight = window.innerHeight - headerHeight;
-    var forward = true;
-
-    // Initial load
-    maestro.mutation(function() {
-      updateListSize();
-      placeItems();
-      updateViewportItems();
-      updateHeader();
-    });
-
-    // Virtual-List management
-    function updateListSize() {
-      list.style.height = source.fullHeight() + 'px';
-    }
-
-    function placeItems() {
-      updateVisibleItems(0, maxItemCount * itemHeight);
-    }
-
-    window.addEventListener('resize', function() {
-      viewPortHeight = window.innerHeight - headerHeight;
-    });
-
-    function recycle(startIndex, criticalEnd) {
-      var recyclableItems = [];
-      for (var i in items) {
-        if ((i < startIndex) || (i > criticalEnd)) {
-          recyclableItems.push(i);
-        }
-      }
-      return recyclableItems;
-    }
-
-    function updateVisibleItems(top, height) {
-      top = top || topPosition;
-      height = height || viewPortHeight;
-
-      var prerenderCount = Math.floor((maxItemCount * itemHeight -
-                                      viewPortHeight) / itemHeight) - 2;
-
-      var startIndex = source.indexAtPosition(top);
-      var criticalEnd = source.indexAtPosition(top + viewPortHeight);
-
-      var recyclableItems = recycle(startIndex, criticalEnd);
-
-      var endIndex = criticalEnd;
-      if (forward) {
-        endIndex = Math.min(source.fullLength() - 1,
-                            criticalEnd + prerenderCount);
-      } else {
-        startIndex = Math.max(0, startIndex - prerenderCount);
-      }
-
-      // Put the items that are furthest away from the displayport at the end of
-      // the array.
-      var actionIndex = forward ? endIndex : startIndex;
-      function distanceFromAction(i) {
-        return Math.abs(i - actionIndex);
-      }
-      recyclableItems.sort(function(a, b) {
-        return distanceFromAction(a) - distanceFromAction(b);
-      });
-
-      for (var i = startIndex; i <= endIndex; ++i) {
-        var item = items[i];
-
-        if (!item) {
-          if (recyclableItems.length > 0) {
-            var recycleIndex = recyclableItems.pop();
-            item = items[recycleIndex];
-            delete items[recycleIndex];
-          } else if (itemsInDOM.length < maxItemCount){
-            item = template.cloneNode(true);
-            list.appendChild(item);
-            itemsInDOM.push(item);
-          } else {
-            // Probably scrolling too fast anyway, bailing out
-            console.warn('missing a cell');
-            continue;
-          }
-
-          source.populateItem(item, i);
-          item.classList.toggle('edit', editMode);
-
-          items[i] = item;
-        }
-
-        item.dataset.position = i * itemHeight;
-
-        var tweakedBy = item.dataset.tweakDelta;
-        if (tweakedBy) {
-          item.style.webkitTransform =
-            item.style.transform = 'translate3d(0, ' + (i * itemHeight +
-                                   parseInt(tweakedBy)) + 'px, 0)';
-        } else  {
-          resetTransform(item);
-        }
-      }
-
-      /* ASCII Art viewport debugging */
-      if (debug) {
-        var str = '[' + forward + ']';
-        for (var i = 0; i < source.fullLength(); i++) {
-          if (i == startIndex) {
-            str += '|';
-          }
-          if (items[i]) {
-            str += 'x';
-          } else {
-            str += '-';
-          }
-          if (i == endIndex) {
-            str += '|';
-          }
-        }
-        console.log(str)
-      }
-    }
-
-    function updateViewportItems() {
+    function updateHeader() {
       return maestro.mutation(function() {
-        var startIndex = Math.max(0, Math.floor(topPosition / itemHeight) - 1);
-        var endIndex = Math.min(source.fullLength() - 1,
-                               ((topPosition + viewPortHeight) /
-                               itemHeight) + 1);
-
-        for (var i in items) {
-          var item = items[i];
-          item.classList.toggle('viewport', i >= startIndex && i <= endIndex);
-        }
+        var h1 = document.querySelector('h1');
+        h1.textContent = 'Main List (' + source.fullLength() + ')';
       });
     }
+    updateHeader();
 
-    listContainer.addEventListener('scroll', function(evt) {
-      maestro.direct(function() {
-        previousTop = topPosition;
-        topPosition = listContainer.scrollTop;
-
-        if ((topPosition - previousTop) > 2) {
-          forward = true;
-        }
-
-        if ((topPosition - previousTop) < -2) {
-          forward = false;
-        }
-
-        var vpTop = topPosition;
-        var vpHeight = maxItemCount * itemHeight;
-
-        updateVisibleItems(vpTop, vpHeight);
-        updateNewIndicator();
-      });
-    });
-
-    function updateNewIndicator() {
+    function clearNewIndicator() {
       var h1After = document.querySelector('#h1-after');
 
-      if (topPosition <= 0 && h1After.classList.contains('new')) {
+      if (h1After.classList.contains('new')) {
         maestro.transition(function() {
           h1After.classList.remove('new');
         }, h1After, 'transitionend');
       }
     }
+    listContainer.addEventListener('top-reached', clearNewIndicator);
+
+    return;
+    // TODO
 
     // New stuff coming in every 15sec
     function newContentHandler() {

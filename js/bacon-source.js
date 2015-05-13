@@ -1,5 +1,5 @@
 (function(exports) {
-  var itemHeight = 87;
+  var itemHeight = 88;
   var listSize = 1042;
 
   function makeContent(prefix) {
@@ -51,6 +51,10 @@
 
     fullLength: function() {
       return this.content.length;
+    },
+
+    itemHeight: function() {
+      return itemHeight;
     },
 
     fullHeight: function() {
