@@ -29,23 +29,24 @@
     }
     listContainer.addEventListener('top-reached', clearNewIndicator);
 
-    return;
-    // TODO
+    function updateNewIndicator() {
+      var h1After = document.querySelector('#h1-after');
+      maestro.transition(function() {
+        h1After.classList.add('new');
+      }, h1After, 'transitionend');
+    }
+    listContainer.addEventListener('hidden-new-content', updateNewIndicator);
 
-    // New stuff coming in every 15sec
     function newContentHandler() {
-      if ((topPosition > itemHeight) || editMode) {
-        // No transition needed, just keep the scroll position
-        insertOnTop(true);
-        return;
-      }
+      var newContent = {
+        title: 'NEW Bacon ' + Date.now().toString().slice(7, -1),
+        body: 'Turkey BLT please.'
+      };
 
-      updateViewportItems()
-        .then(pushDown)
-        .then(insertOnTop.bind(null, false))
-        .then(cleanInlineStyles)
-        .then(updateViewportItems)
-        .then(slideIn)
+      source.insertAtIndex(0, newContent);
+      list.insertedAtIndex(0);
+
+      updateHeader();
     }
 
     setInterval(newContentHandler, 15000);
@@ -55,120 +56,17 @@
       window.dispatchEvent(new CustomEvent('new-content'));
     };
 
-    function pushDown() {
-      if (!itemsInDOM.length) {
-        return Promise.resolve();
-      }
-
-      return maestro.transition(function() {
-        for (var i = 0; i < itemsInDOM.length; i++) {
-          var item = itemsInDOM[i];
-          item.style.transition = 'transform 0.25s ease';
-          item.style.webkitTransition = '-webkit-transform 0.25s ease';
-          tweakTransform(item, itemHeight);
-        }
-      }, itemsInDOM[0], 'transitionend');
-    }
-
-    function cleanInlineStyles() {
-      return maestro.mutation(function() {
-        for (var i = 0; i < itemsInDOM.length; i++) {
-          var item = itemsInDOM[i];
-          item.style.transition = '';
-          item.style.webkitTransition = '';
-          resetTransform(item);
-        }
-        listContainer.scrollTop; // flushing
-      });
-    }
-
-    function slideIn() {
-      var newEl = list.querySelector('li[data-to-slide]');
-
-      return maestro.transition(function() {
-        delete newEl.dataset.toSlide;
-        setTimeout(function() {
-          newEl.style.transition = 'transform 0.25s ease';
-          newEl.style.webkitTransition = '-webkit-transform 0.25s ease';
-          resetTransform(newEl);
-        });
-      }, newEl, 'transitionend').then(function() {
-        newEl.style.transition = '';
-        newEl.style.webkitTransition = '';
-        var rec = source.recordAtIndex(0);
-        delete rec.toSlide;
-        source.replaceAtIndex(0, rec);
-      });
-    }
-
-    function insertOnTop(keepScrollPosition) {
-      return maestro.mutation(function() {
-        var newContent = {
-          title: 'NEW Bacon ' + Date.now().toString().slice(7, -1),
-          body: 'Turkey BLT please.',
-          toSlide: !keepScrollPosition
-        };
-        source.insertAtIndex(0, newContent);
-
-        items.unshift(null);
-        delete items[0]; // keeping it sparse
-
-        updateListSize();
-
-        if (keepScrollPosition) {
-          listContainer.scrollTop += itemHeight;
-
-          var h1After = document.querySelector('#h1-after');
-          maestro.transition(function() {
-            h1After.classList.add('new');
-          }, h1After, 'transitionend');
-        }
-
-        updateVisibleItems();
-        updateHeader();
-      });
-    }
-
-    function updateHeader() {
-      return maestro.mutation(function() {
-        var h1 = document.querySelector('h1');
-        h1.textContent = 'Main List (' + source.fullLength() + ')';
-      });
-    }
-
-    // Edition support
     var button = document.querySelector('button');
     button.addEventListener('click', function() {
-      if (editMode) {
-        exitEditMode();
-      } else {
-        enterEditMode();
-      }
-    });
-
-    function enterEditMode() {
-      changeEditMode('Exit', toggleEditClass.bind(null, true));
-      startTouchListeners();
-    }
-
-    function exitEditMode() {
-      changeEditMode('Edit', toggleEditClass.bind(null, false));
-      stopTouchListeners();
-    }
-
-    function changeEditMode(text, toggleEditClass) {
-      var update = updateText.bind(null, text);
-
       toggleTransitioning()
-        .then(updateViewportItems)
-        .then(toggleEditClass)
-        .then(update)
+        .then(list.toggleEditMode.bind(list))
+        .then(updateText)
         .then(toggleTransitioning);
-    }
+    });
 
     function updateText(text) {
       return maestro.mutation(function() {
-        button.textContent = text;
+        button.textContent = list.editing ? 'Exit' : 'Edit';
       });
     }
 
@@ -178,16 +76,10 @@
       }, button, 'transitionend', 300, true /* feedback */);
     }
 
-    function toggleEditClass(on) {
-      return maestro.transition(function() {
-        editMode = on;
-        for (var i = 0; i < itemsInDOM.length; i++) {
-          var item = itemsInDOM[i];
-          item.classList.toggle('edit', on);
-        }
-      }, itemsInDOM[0], 'transitionend');
-    }
+    return;
+    // TODO
 
+    // Reordering support
     function startTouchListeners() {
       list.addEventListener('touchstart', liTouchStart);
       list.addEventListener('touchmove', liTouchMove);

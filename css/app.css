@@ -82,6 +82,10 @@ ul li {
   will-change: transform;
 }
 
+li.new {
+  opacity: 0;
+}
+
 li .overlay {
   position: absolute;
   top: 1px;
