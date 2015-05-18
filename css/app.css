@@ -22,7 +22,7 @@ h1 {
   background-color: #ff9500;
   opacity: 0;
 
-  transition: opacity 0.25s linear;
+  transition: opacity 0.15s linear;
 }
 
 #h1-after.new {
@@ -49,15 +49,13 @@ button {
   -moz-appearance: none;
 
   opacity: 1;
-  transition: opacity 0.25s linear;
-}
-
-button:active {
-  opacity: 0.5;
+  transition: transform 0.15s linear,
+              opacity 0.15s linear;
 }
 
 button.transitioning {
   opacity: 0.5;
+  transform: scale(0.6, 0.6);
   pointer-events: none;
 }
 
@@ -96,7 +94,7 @@ li .overlay {
   background: rgba(255, 255, 255, 0.7);
 
   opacity: 0;
-  transition: opacity 0.3s linear;
+  transition: opacity 0.2s linear;
 }
 
 li.new .overlay {
