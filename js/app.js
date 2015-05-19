@@ -73,7 +73,7 @@
     function toggleTransitioning() {
       return maestro.transition(function() {
         button.classList.toggle('transitioning');
-      }, button, 'transitionend', 300, true /* feedback */);
+      }, button, 'transitionend', 350, true /* feedback */);
     }
   });
 })();
