@@ -8,7 +8,7 @@ suite('DomScheduler >', function() {
   var fakeTransitionDuration = 250;
   var fakeDirectCost = 10;
   var fakeMutationCost = 100;
-  var directProtectionDuration = 300;
+  var directProtectionDuration = 160;
 
   function fakeTransition(clock, callback, elm, transition) {
     return function() {
@@ -39,6 +39,7 @@ suite('DomScheduler >', function() {
   setup(function() {
     this.sinon = sinon.sandbox.create();
     this.sinon.useFakeTimers();
+
     this.subject = new DomScheduler();
 
     this.sinon.stub(window, 'requestAnimationFrame').returns(rafID);
@@ -227,6 +228,35 @@ suite('DomScheduler >', function() {
     test('should delay transitions during mutations flush', function(done) {
       var clock = this.sinon.clock;
       var elm = document.createElement('div');
+      var subject = this.subject;
+
+      subject.direct(fakeDirect(clock, function() {
+        assert.equal(0, Date.now(), 'first direct block executed right away');
+      }));
+      window.requestAnimationFrame.yield();
+
+      var tr = fakeTransition(clock, function() {
+        assert.equal(directProtectionDuration + fakeMutationCost,
+                     Date.now(), 'transition block executed after the flush');
+        done();
+      }, elm, true);
+
+      subject.mutation(fakeMutation(clock, function() {
+        assert.equal(directProtectionDuration, Date.now(),
+                     'mutation block executed next');
+
+        subject.transition(tr, elm, 'transitionend');
+      })).then(function() {
+        clock.tick(1); // to dequeue transitions
+      });
+
+      clock.tick(directProtectionDuration);
+    });
+
+    test('should dequeue transitions before mutations after a direct',
+    function(done) {
+      var clock = this.sinon.clock;
+      var elm = document.createElement('div');
 
       this.subject.direct(fakeDirect(clock, function() {
         assert.equal(0, Date.now(), 'first direct block executed right away');
@@ -234,15 +264,15 @@ suite('DomScheduler >', function() {
       window.requestAnimationFrame.yield();
 
       this.subject.mutation(fakeMutation(clock, function() {
-        assert.equal(directProtectionDuration, Date.now(),
-                     'mutation block executed next');
+        assert.equal(directProtectionDuration + fakeTransitionDuration,
+                     Date.now(), 'mutation block executed last');
       })).then(function() {
         clock.tick(1); // to dequeue transitions
       });
 
       var tr = fakeTransition(clock, function() {
-        assert.equal(directProtectionDuration + fakeMutationCost,
-                     Date.now(), 'transition block executed after the flush');
+        assert.equal(directProtectionDuration,
+                     Date.now(), 'transition block executed next');
         done();
       }, elm, true);
       this.subject.transition(tr, elm, 'transitionend');

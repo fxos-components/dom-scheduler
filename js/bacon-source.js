@@ -1,5 +1,5 @@
 (function(exports) {
-  var itemHeight = 87;
+  var itemHeight = 88;
   var listSize = 1042;
 
   function makeContent(prefix) {
@@ -31,12 +31,6 @@
 
       title.firstChild.data = record.title;
       body.firstChild.data = record.body;
-
-      if (record.toSlide) {
-        item.dataset.toSlide = true;
-      } else if (item.dataset.toSlide) {
-        delete item.dataset.toSlide;
-      }
     },
 
     indexAtPosition: function(pos) {
@@ -51,6 +45,10 @@
 
     fullLength: function() {
       return this.content.length;
+    },
+
+    itemHeight: function() {
+      return itemHeight;
     },
 
     fullHeight: function() {
