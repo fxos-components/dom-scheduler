@@ -8,7 +8,7 @@ suite('DomScheduler >', function() {
   var fakeTransitionDuration = 250;
   var fakeDirectCost = 10;
   var fakeMutationCost = 100;
-  var directProtectionDuration = 300;
+  var directProtectionDuration = 160;
 
   function fakeTransition(clock, callback, elm, transition) {
     return function() {
