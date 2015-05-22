@@ -1,31 +1,42 @@
 # Dom Scheduler
 
-## Disclaimer
-This is an early proof of concept to see if the idea has some legs.
-
 ## Concept
-The DOM is pretty fast, layout is pretty fast, CSS transitions are crazy
-fast...but doing any two of them at the same time will cause horrible
-performance glitches.
+The DOM is pretty fast, layout is pretty fast, CSS transitions are
+smooth... but doing any two of them at the same time can quickly cause
+nasty performance glitches.
 
-This is why it's easy to demo 60fps on a web app but real-world usage
-frequently causes frame drops and other displeasures.
+This explains why it's easy to demo a 60fps transition on a web app but
+real-world usage is usually full of frame drops and other issues.
+
+The **DomScheduler** is not an abstraction. It's a little helper making it
+easy to express what type of operations you're doing, in which order. The
+Scheduler then takes care of making sure everything happens with the
+best perceived performance.
 
 This project has 2 main goals:
-  - Prevent trivial DOM changes from ruining transition performance by
-    delaying / scheduling them better. Even if they come from different
-    parts of the app.
-  - Enable developers to easily express the ideal sequence for a change.
+
+  - Preventing trivial DOM changes in some unrelated part of your code from
+    ruining a transition.
+  - Enabling developers to easily express the ideal sequence for a
+    change happening in phases (with Promise chains).
+
+### Operations types
+* _Direct_ manipulation
+* Instant _feedback_
+* _Transition_ / animation
+* _Mutation_
 
 ### What's a typical ideal sequence?
-Let's take a dead-simple example like adding an item at the top of a list. To do
+Let's take a simple example like adding an item at the top of a list. To do
 that smoothly we want to:
+
   - **[transition]** push everything down to make room for the new item
   - **[mutation]** insert the new item into the DOM but outside of the
     viewport (so the item doesn't flash on screen)
   - **[transition]** slide the new item in the viewport
 
 Usually this means
+
 ```javascript
 setupTransitionOnElements();
 container.addEventListener('transitionend', function trWait() {
@@ -41,6 +52,7 @@ container.addEventListener('transitionend', function trWait() {
 
 But of course we'd rather use promises to express this kind of sequence
 like
+
 ```javascript
   pushDown(elements)
     .then(insertInDocument)
@@ -48,26 +60,19 @@ like
     .then(cleanUp)
 ```
 
-Another badass sequence, granted that you use a promise-based storage
-system might be something like
+Another badass sequence, using a promise-based storage system might be
+something like
+
 ```javascript
 Promise.all([reflectChangeWithTransitions(), persistChange()])
   .then(reflectChangeInDocument)
   .then(cleanUp)
 ```
 
-## Demo APP
-To illustrate the benefits of the scheduling approach the project comes
-with a simple demo app: a re-orderable list where new content comes in
-every few seconds.
-
-The interesting part is of course the _"real life"_ behaviors:
-  - when new content comes in while scrolling
-  - when the edit mode is toggled while the system is busy scrolling
-  - when anything happens during a re-order manipulation
-
-_(You can turn on the `naive` flag in `lib/dom-scheduler.js` to disable
-scheduling and compare.)_
+* `reflectChangeWithTransition()` is a scheduled operation
+* `persitChange()` is your backend call
+* `reflectChangeInDocument` is a scheduled mutation
+* `cleanUp` is a scheduled mutation
 
 ## API
 
@@ -92,8 +97,7 @@ el.addEventListener('touchmove', (evt) => {
 Transitions blocks should be used to encapsulate CSS
 transitions/animations.
 They will be protected from DOM mutations to perform smoothly and they
-return a promise fulfilled once `evt` is received or after `timeout` for
-chaining.
+return a promise fulfilled once `evt` is received or after `timeout`.
 
 If the `feedback` flag is set the block will have the same priority than
 a _direct_ manipulation block.
@@ -112,15 +116,15 @@ scheduler.transition(() => {
 ### Mutation blocks
 `scheduler.mutation(block)`
 
-Mutations blocks should be used to write to the DOM or perform
-actions requiring a reflow that are not direct manipulations.
+Mutations blocks should be used to write to the DOM or perform actions
+requiring the layout to be computed.
 
-**We shoud always aim for the document to be almost visually identical
+**We shoud always aim for the document to be (almost) visually identical
 _before_ and _after_ a mutation block.
 Any big change in layout/size will cause a flash/jump.**
 
 Mutation blocks might be delayed (eg. during a transition) and they
-return a promise fullfilled once the block got executed for chaining.
+return a promise fullfilled once the block is executed for chaining.
 
 #### Example
 ```javascript
@@ -135,6 +139,25 @@ maestro.mutation(() => {
     priority and delay the rest
   - `transition` delays mutations
   - transitions are postponed while delayed mutations are being flushed
+  - when both `transition`s and `mutation`s are queued because of direct
+    manipulation, `transition`s are flushed first
+
+## Demo APP
+To illustrate the benefits of the scheduling approach the project comes
+with a demo app: a **big** re-orderable (virtual) list where new content comes
+in every few seconds.
+
+The interesting part is of course the _"real life"_ behaviors:
+  - when new content comes in while scrolling
+  - when the edit mode is toggled while the system is busy scrolling
+  - when anything happens during a re-order manipulation
+
+_(You can turn on the `naive` flag in `lib/dom-scheduler.js` to disable
+scheduling and compare.)_
+
+A (potentially outdated) version of the demo is usually accessible at
+[http://sgz.fr/ds](http://sgz.fr/ds) and should work on any mobile
+device.
 
 ## Tests
 
