@@ -142,6 +142,19 @@ maestro.mutation(() => {
   - when both `transition`s and `mutation`s are queued because of direct
     manipulation, `transition`s are flushed first
 
+## Debug mode
+While it can have a negative impact on performance, it's recommended to
+turn the debug mode on from time to time during development to catch
+frequent mistakes early on.
+
+Currently the debug mode will warn you about
+
+* Transition block for which we never get an "end" event
+* Direct blocks taking longer than 16ms
+
+You can trun on the debug mode by setting `debug` to `true` in
+`lib/dom-scheduler.js`.
+
 ## Demo APP
 To illustrate the benefits of the scheduling approach the project comes
 with a demo app: a **big** re-orderable (virtual) list where new content comes
