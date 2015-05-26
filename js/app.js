@@ -32,6 +32,10 @@
 
     function updateNewIndicator() {
       var h1After = document.querySelector('#h1-after');
+      if (h1After.classList.contains('new')) {
+        return;
+      }
+
       maestro.transition(function() {
         h1After.classList.add('new');
       }, h1After, 'transitionend');
