@@ -1,4 +1,5 @@
 /*global sinon, suite, setup, teardown, test, DomScheduler, assert */
+
 suite('DomScheduler >', function() {
   'use strict';
 
@@ -8,7 +9,7 @@ suite('DomScheduler >', function() {
   var fakeTransitionDuration = 250;
   var fakeDirectCost = 10;
   var fakeMutationCost = 100;
-  var directProtectionDuration = 160;
+  var directProtectionDuration = 260;
 
   function fakeTransition(clock, callback, elm, transition) {
     return function() {
