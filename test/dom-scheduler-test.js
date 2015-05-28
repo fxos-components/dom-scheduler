@@ -115,7 +115,7 @@ suite('DomScheduler >', function() {
 
       sinon.assert.calledOnce(spy);
       sinon.assert.notCalled(thenSpy);
-      clock.tick(350);
+      clock.tick(500);
     });
   });
 

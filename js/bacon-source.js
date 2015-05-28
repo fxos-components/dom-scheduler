@@ -20,10 +20,6 @@
   };
 
   exports.BaconSource.prototype = {
-    recordAtIndex: function(i) {
-      return this.content[i];
-    },
-
     populateItem: function(item, i) {
       var title = item.firstChild;
       var body = title.nextSibling;
