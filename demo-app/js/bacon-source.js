@@ -29,6 +29,10 @@
       body.firstChild.data = record.body;
     },
 
+    getRecordAt: function(index) {
+      return this.content[index];
+    },
+
     indexAtPosition: function(pos) {
       return Math.min(this.content.length - 1,
                       Math.max(0,
