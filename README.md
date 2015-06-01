@@ -186,3 +186,9 @@ If you would like tests to run on file change use:
 Run lint check with command:
 
 `$ npm run lint`
+
+## License
+
+Mozilla Public License 2.0
+
+http://mozilla.org/MPL/2.0/
