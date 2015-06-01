@@ -167,13 +167,16 @@ suite('DomScheduler >', function() {
       }));
       window.requestAnimationFrame.yield();
 
+      var feedbackExecuted = false;
       var tr = fakeTransition(clock, function() {
-        assert.equal(0, Date.now(), 'feedback block executed next');
+        assert.equal(fakeDirectCost, Date.now(), 'feedback block executed next');
+        feedbackExecuted = true;
       }, elm, true);
-      this.subject.transition(tr, elm, 'transitionend', true);
+      this.subject.feedback(tr, elm, 'transitionend');
 
       this.subject.direct(fakeDirect(clock, function() {
-        assert.equal(fakeDirectCost, Date.now(),
+        assert.isTrue(feedbackExecuted);
+        assert.equal(fakeDirectCost + fakeTransitionCost, Date.now(),
                      'second direct block executed last');
         done();
       }));
