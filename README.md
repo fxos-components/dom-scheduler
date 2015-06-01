@@ -20,7 +20,7 @@ This project has 2 main goals:
   - Enabling developers to easily express the ideal sequence for a
     change happening in phases (with Promise chains).
 
-### Operations types
+### Operations types by priotity
 * _Direct_ manipulation
 * Instant _feedback_
 * _Transition_ / animation
@@ -91,16 +91,34 @@ el.addEventListener('touchmove', (evt) => {
 });
 ```
 
+### Feedback blocks
+`scheduler.feedback(block, elm, evt, timeout)`
+
+Feedback blocks should be used to encapsulate CSS
+transitions/animations triggered in direct response to a user interaction.
+eg. button pressed state
+
+They will be protected from DOM mutations to perform smoothly and they
+return a promise fulfilled once `evt` is received or after `timeout`.
+
+The block will have the same priority than a _direct_ manipulation block.
+
+#### Example
+```javascript
+scheduler.feedback(() => {
+  el.classList.add('pressed');
+}, el, 'transitionend').then(() => {
+  el.classList.remove('pressed');
+});
+```
+
 ### Transition blocks
-`scheduler.transition(block, elm, evt, timeout, feedback)`
+`scheduler.transition(block, elm, evt, timeout)`
 
 Transitions blocks should be used to encapsulate CSS
 transitions/animations.
 They will be protected from DOM mutations to perform smoothly and they
 return a promise fulfilled once `evt` is received or after `timeout`.
-
-If the `feedback` flag is set the block will have the same priority than
-a _direct_ manipulation block.
 
 #### Example
 ```javascript
