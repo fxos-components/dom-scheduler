@@ -169,7 +169,8 @@ suite('DomScheduler >', function() {
 
       var feedbackExecuted = false;
       var tr = fakeTransition(clock, function() {
-        assert.equal(fakeDirectCost, Date.now(), 'feedback block executed next');
+        assert.equal(fakeDirectCost, Date.now(),
+                     'feedback block executed next');
         feedbackExecuted = true;
       }, elm, true);
       this.subject.feedback(tr, elm, 'transitionend');
