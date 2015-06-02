@@ -8,6 +8,16 @@
     <link rel="stylesheet" href="css/ul.css">
     <link rel="stylesheet" href="css/app.css">
 
+    <!-- GAIA DIALOG -->
+    <link rel="import" type="text/html" href="gaia-dialog/src/gaia-dialog.html">
+    <link rel="stylesheet" type="text/css" href="gaia-dialog/bower_components/base/base.css">
+    <link rel="stylesheet" type="text/css" href="gaia-dialog/bower_components/gaia-theme/gaia-theme.css">
+    <link rel="stylesheet" type="text/css" href="gaia-dialog/bower_components/gaia-fonts/style.css">
+
+    <script type="text/javascript" src="gaia-dialog/js/lazy_loader.js"></script>
+    <!--<script src="gaia-dialog/gaia-dialog.js"></script>
+    <script src="gaia-dialog/gaia-dialog-alert.js"></script>-->
+
     <script type="text/javascript" src="lib/dom-scheduler.js" async></script>
     <script type="text/javascript" src="lib/scheduled-list.js" async></script>
 
@@ -35,6 +45,8 @@
           ></li>
       </ul>
     </section>
+
+    <gaia-dialog-alert>List item clicked!</gaia-dialog-alert>
   </body>
 
 </html>
