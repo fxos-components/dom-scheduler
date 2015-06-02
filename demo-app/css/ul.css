@@ -21,6 +21,8 @@ ul li h3 {
   background: white;
 
   color: #424242;
+
+  pointer-events: none;
 }
 
 ul li p {
@@ -29,4 +31,6 @@ ul li p {
   background: white;
 
   color: #797979;
+
+  pointer-events: none;
 }

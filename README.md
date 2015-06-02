@@ -186,9 +186,22 @@ The interesting part is of course the _"real life"_ behaviors:
 _(You can turn on the `naive` flag in `lib/dom-scheduler.js` to disable
 scheduling and compare.)_
 
+### Web page version
+The `index.html` at the root of this repository is meant for broad device
+and browser testing so we try to keep gecko/webkit/blink compatibility.
+
 A (potentially outdated) version of the demo is usually accessible at
 [http://sgz.fr/ds](http://sgz.fr/ds) and should work on any mobile
 device.
+
+### Packaged version
+The `demo-app` directory is a certified packaged app where we experiment
+with web components and other stuffs.
+
+**Before installing it with the WebIDE run:**
+```shell
+git submodule init && git submodule update
+```
 
 ## Tests
 
