@@ -23,23 +23,23 @@
     function clearNewIndicator() {
       var h1After = document.querySelector('#h1-after');
 
-      if (h1After.classList.contains('new')) {
+      if (h1After.dataset.anim == 'reveal') {
         maestro.transition(function() {
-          h1After.classList.remove('new');
-        }, h1After, 'transitionend');
+          h1After.dataset.anim = 'hide';
+        }, h1After, 'animationend');
       }
     }
     listContainer.addEventListener('top-reached', clearNewIndicator);
 
     function updateNewIndicator() {
       var h1After = document.querySelector('#h1-after');
-      if (h1After.classList.contains('new')) {
+      if (h1After.dataset.anim == 'reveal') {
         return;
       }
 
       maestro.transition(function() {
-        h1After.classList.add('new');
-      }, h1After, 'transitionend');
+        h1After.dataset.anim = 'reveal';
+      }, h1After, 'animationend');
     }
     listContainer.addEventListener('hidden-new-content', updateNewIndicator);
 

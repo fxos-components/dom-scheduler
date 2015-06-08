@@ -22,13 +22,62 @@ h1 {
 
   pointer-events: none;
   background-color: #ff9500;
+
   opacity: 0;
 
-  transition: opacity 0.25s linear;
+  animation-duration:  0.25s;
+  animation-timing-function: ease-in;
+  animation-fill-mode: both;
+
+  -webkit-animation-duration:  0.25s;
+  -webkit-animation-timing-function: ease-in;
+  -webkit-animation-fill-mode: both;
 }
 
-#h1-after.new {
-  opacity: 1;
+[data-anim='reveal'] {
+  animation-name: reveal;
+  -webkit-animation-name: reveal;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+[data-anim='hide'] {
+  animation-name: hide;
+  -webkit-animation-name: hide;
+}
+
+@keyframes hide {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@-webkit-keyframes hide {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 button {
@@ -101,13 +150,15 @@ li .overlay {
   background: rgba(255, 255, 255, 0.7);
 
   opacity: 0;
-  transition: opacity 0.2s linear;
+  animation-duration:  0.2s;
+  animation-timing-function: ease-in;
+  animation-fill-mode: both;
+
+  -webkit-animation-duration:  0.2s;
+  -webkit-animation-timing-function: ease-in;
+  -webkit-animation-fill-mode: both;
 
   pointer-events: none;
-}
-
-li.new .overlay {
-  transition: none;
 }
 
 li.edit .overlay {
