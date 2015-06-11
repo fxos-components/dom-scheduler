@@ -63,8 +63,7 @@
 
     var button = document.querySelector('button');
     button.addEventListener('touchend', function() {
-      toggleTransitioning()
-        .then(list.toggleEditMode.bind(list))
+      Promise.all([toggleTransitioning(), list.toggleEditMode()])
         .then(updateText)
         .then(toggleTransitioning);
     });
