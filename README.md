@@ -77,17 +77,24 @@ Promise.all([reflectChangeWithTransitions(), persistChange()])
 ## API
 
 ### Direct blocks
-`scheduler.direct(block)`
 
 Direct blocks should be used for direct manipulation (touchevents,
 scrollevents...). As such they have the highest priority.
 
+You _"attach"_ a direct block to a specific event.
+The scheduler takes care of adding and removing event listeners.
+The event object will be passed to the `block` as the first parameter.
+
+#### Attaching a handler
+`scheduler.attachDirect(elm, evt, block)`
+
+#### Detaching a handler
+`scheduler.detachDirect(elm, evt, block)`
+
 #### Example
 ```javascript
-el.addEventListener('touchmove', (evt) => {
-  scheduler.direct(() => {
-    el.style.transform = computeTransform(evt);
-  });
+scheduler.attachDirect(el, 'touchmove', (evt) => {
+  el.style.transform = computeTransform(evt);
 });
 ```
 
