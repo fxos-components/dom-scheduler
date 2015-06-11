@@ -69,7 +69,7 @@ Promise.all([reflectChangeWithTransitions(), persistChange()])
   .then(cleanUp)
 ```
 
-* `reflectChangeWithTransition()` is a scheduled operation
+* `reflectChangeWithTransition()` is a scheduled transition
 * `persitChange()` is your backend call
 * `reflectChangeInDocument` is a scheduled mutation
 * `cleanUp` is a scheduled mutation
@@ -99,7 +99,7 @@ transitions/animations triggered in direct response to a user interaction.
 eg. button pressed state
 
 They will be protected from DOM mutations to perform smoothly and they
-return a promise fulfilled once `evt` is received or after `timeout`.
+return a promise fulfilled once `evt` is received on `elm` or after `timeout`ms.
 
 The block will have the same priority than a _direct_ manipulation block.
 
@@ -118,7 +118,7 @@ scheduler.feedback(() => {
 Transitions blocks should be used to encapsulate CSS
 transitions/animations.
 They will be protected from DOM mutations to perform smoothly and they
-return a promise fulfilled once `evt` is received or after `timeout`.
+return a promise fulfilled once `evt` is received on `elm` or after `timeout`ms.
 
 #### Example
 ```javascript
