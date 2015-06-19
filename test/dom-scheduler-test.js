@@ -56,26 +56,169 @@ suite('DomScheduler >', function() {
   });
 
   suite('Direct blocks', function() {
-    test('should be scheduled inside a requestAnimationFrame', function() {
-      var spy = this.sinon.spy();
-      this.subject.direct(fakeDirect(this.sinon.clock, spy));
+    suite('Attaching', function() {
+      test('should add the event listener for the first block', function() {
+        var elm = document.createElement('div');
+        var addEventSpy = this.sinon.spy(elm, 'addEventListener');
 
-      sinon.assert.notCalled(spy);
-      window.requestAnimationFrame.yield();
-      sinon.assert.calledOnce(spy);
+        this.subject.attachDirect(elm, 'touchmove', this.sinon.spy());
+        this.subject.attachDirect(elm, 'touchmove', this.sinon.spy());
+
+        sinon.assert.calledOnce(addEventSpy);
+        sinon.assert.calledWith(addEventSpy, 'touchmove', this.subject);
+      });
+
+      test('should be scheduled inside a requestAnimationFrame', function() {
+        var elm = document.createElement('div');
+        var spy = this.sinon.spy();
+
+        this.subject.attachDirect(elm, 'touchmove', spy);
+
+        elm.dispatchEvent(new CustomEvent('touchmove'));
+
+        sinon.assert.notCalled(spy);
+        window.requestAnimationFrame.yield();
+        sinon.assert.calledOnce(spy);
+      });
+
+      test('should pass the event as parameter to the block', function() {
+        var elm = document.createElement('div');
+        var spy = this.sinon.spy();
+
+        this.subject.attachDirect(elm, 'touchmove', spy);
+
+        var evt = new CustomEvent('touchmove');
+        elm.dispatchEvent(evt);
+        window.requestAnimationFrame.yield();
+
+        sinon.assert.calledWith(spy, evt);
+      });
+
+      test('should be triggered by a bubbling event', function() {
+        var elm = document.createElement('div');
+        var child = document.createElement('span');
+        elm.appendChild(child);
+        document.body.appendChild(elm);
+        var spy = this.sinon.spy();
+
+        this.subject.attachDirect(elm, 'touchmove', spy);
+
+        child.dispatchEvent(new CustomEvent('touchmove', {
+          bubbles: true
+        }));
+        window.requestAnimationFrame.yield();
+
+        sinon.assert.calledOnce(spy);
+      });
+
+      test('should be coallesced', function() {
+        var elm = document.createElement('div');
+        var clock = this.sinon.clock;
+
+        var directCallCount = 0;
+        this.subject.attachDirect(elm, 'scroll', fakeDirect(clock, function() {
+          directCallCount++;
+        }));
+
+        elm.dispatchEvent(new CustomEvent('scroll'));
+        elm.dispatchEvent(new CustomEvent('scroll'));
+
+        sinon.assert.calledWith(window.cancelAnimationFrame, rafID);
+        window.requestAnimationFrame.yield();
+
+        assert.equal(directCallCount, 1);
+      });
+
+      test('should support multiple handlers for the same event', function() {
+        var elm = document.createElement('div');
+        var scrollSpy = this.sinon.spy();
+        var otherScrollSpy = this.sinon.spy();
+
+        this.subject.attachDirect(elm, 'scroll', scrollSpy);
+        this.subject.attachDirect(elm, 'scroll', otherScrollSpy);
+
+        elm.dispatchEvent(new CustomEvent('scroll'));
+        elm.dispatchEvent(new CustomEvent('scroll'));
+
+        sinon.assert.calledOnce(window.cancelAnimationFrame);
+
+        window.requestAnimationFrame.yield();
+        sinon.assert.calledOnce(scrollSpy);
+        sinon.assert.calledOnce(otherScrollSpy);
+      });
+
+      test('should not coallesce different handlers together', function() {
+        var elm = document.createElement('div');
+        var moveSpy = this.sinon.spy();
+        var scrollSpy = this.sinon.spy();
+
+        this.subject.attachDirect(elm, 'scroll', scrollSpy);
+        this.subject.attachDirect(elm, 'touchmove', moveSpy);
+
+        elm.dispatchEvent(new CustomEvent('scroll'));
+        elm.dispatchEvent(new CustomEvent('touchmove'));
+
+        sinon.assert.notCalled(window.cancelAnimationFrame);
+
+        window.requestAnimationFrame.yield();
+        sinon.assert.calledOnce(scrollSpy);
+        sinon.assert.calledOnce(moveSpy);
+      });
     });
 
-    test('should be coallesced', function() {
-      var clock = this.sinon.clock;
-      var spyOne = this.sinon.spy();
-      var spyTwo = this.sinon.spy();
-      this.subject.direct(fakeDirect(clock, spyOne));
-      this.subject.direct(fakeDirect(clock, spyTwo));
+    suite('Detaching', function() {
+      test('should remove the event listener when the last block is removed',
+      function() {
+        var elm = document.createElement('div');
+        var removeEventSpy = this.sinon.spy(elm, 'removeEventListener');
+        var spyOne = this.sinon.spy();
+        var spyTwo = this.sinon.spy();
 
-      sinon.assert.calledWith(window.cancelAnimationFrame, rafID);
-      window.requestAnimationFrame.yield();
-      sinon.assert.notCalled(spyOne);
-      sinon.assert.calledOnce(spyTwo);
+        this.subject.attachDirect(elm, 'touchmove', spyOne);
+        this.subject.attachDirect(elm, 'touchmove', spyTwo);
+
+        this.subject.detachDirect(elm, 'touchmove', spyOne);
+        sinon.assert.notCalled(removeEventSpy);
+        this.subject.detachDirect(elm, 'touchmove', spyTwo);
+        sinon.assert.calledOnce(removeEventSpy);
+        sinon.assert.calledWith(removeEventSpy, 'touchmove', this.subject);
+      });
+
+      test('should cancel any pending animation frames requests', function() {
+        var elm = document.createElement('div');
+        var spy = this.sinon.spy();
+
+        this.subject.attachDirect(elm, 'touchmove', spy);
+
+        elm.dispatchEvent(new CustomEvent('touchmove'));
+        sinon.assert.notCalled(spy);
+
+        this.subject.detachDirect(elm, 'touchmove', spy);
+        sinon.assert.calledOnce(window.cancelAnimationFrame, 42);
+      });
+
+      test('should continue triggering after a remove', function() {
+        var elm = document.createElement('div');
+        var scrollSpy = this.sinon.spy();
+        var otherScrollSpy = this.sinon.spy();
+
+        this.subject.attachDirect(elm, 'scroll', scrollSpy);
+        this.subject.attachDirect(elm, 'scroll', otherScrollSpy);
+
+        elm.dispatchEvent(new CustomEvent('scroll'));
+        window.requestAnimationFrame.yield();
+
+        sinon.assert.calledOnce(scrollSpy);
+        sinon.assert.calledOnce(otherScrollSpy);
+
+        this.subject.detachDirect(elm, 'scroll', otherScrollSpy);
+
+        elm.dispatchEvent(new CustomEvent('scroll'));
+        window.requestAnimationFrame.yield();
+
+        sinon.assert.calledTwice(scrollSpy);
+        sinon.assert.calledOnce(otherScrollSpy);
+      });
     });
   });
 
@@ -136,25 +279,72 @@ suite('DomScheduler >', function() {
       var clock = this.sinon.clock;
       var elm = document.createElement('div');
 
-      this.subject.direct(fakeDirect(clock, function() {
-        assert.equal(0, Date.now(), 'first direct block executed right away');
+      var directCallCount = 0;
+      this.subject.attachDirect(elm, 'touchmove', fakeDirect(clock, function() {
+        switch (directCallCount) {
+          case 0:
+            assert.equal(0, Date.now(), 'first direct executed right away');
+            break;
+          case 1:
+            assert.equal(fakeDirectCost, Date.now(),
+                         'second direct executed after');
+            break;
+        }
+        directCallCount++;
       }));
+
+      elm.dispatchEvent(new CustomEvent('touchmove'));
       window.requestAnimationFrame.yield();
 
       var tr = fakeTransition(clock, function() {
         assert.equal(fakeDirectCost + directProtectionDuration, Date.now(),
                      'transition block executed last');
+        assert.equal(directCallCount, 2);
         done();
       }, elm, true);
       this.subject.transition(tr, elm, 'transitionend');
 
-      this.subject.direct(fakeDirect(clock, function() {
-        assert.equal(fakeDirectCost, Date.now(),
-                     'second direct block executed after');
-      }));
+      elm.dispatchEvent(new CustomEvent('touchmove'));
       window.requestAnimationFrame.yield();
 
       clock.tick(directProtectionDuration);
+    });
+
+    test('should stop direct protection on detach', function(done) {
+      var clock = this.sinon.clock;
+      var elm = document.createElement('div');
+
+      var directCallCount = 0;
+      var directHandler = fakeDirect(clock, function() {
+        switch (directCallCount) {
+          case 0:
+            assert.equal(0, Date.now(), 'first direct executed right away');
+            break;
+          case 1:
+            assert.equal(fakeDirectCost, Date.now(),
+                         'second direct executed after');
+            break;
+        }
+        directCallCount++;
+      });
+
+      this.subject.attachDirect(elm, 'touchmove', directHandler);
+
+      elm.dispatchEvent(new CustomEvent('touchmove'));
+      window.requestAnimationFrame.yield();
+
+      var tr = fakeTransition(clock, function() {
+        assert.equal(fakeDirectCost * 2, Date.now(),
+                     'transition block executed last');
+        assert.equal(directCallCount, 2);
+        done();
+      }, elm, true);
+      this.subject.transition(tr, elm, 'transitionend');
+
+      elm.dispatchEvent(new CustomEvent('touchmove'));
+      window.requestAnimationFrame.yield();
+
+      this.subject.detachDirect(elm, 'touchmove', directHandler);
     });
 
     test('should give feedbacks the same priority than direct blocks',
@@ -162,9 +352,23 @@ suite('DomScheduler >', function() {
       var clock = this.sinon.clock;
       var elm = document.createElement('div');
 
-      this.subject.direct(fakeDirect(clock, function() {
-        assert.equal(0, Date.now(), 'first direct block executed right away');
+      var directCallCount = 0;
+      this.subject.attachDirect(elm, 'touchmove', fakeDirect(clock, function() {
+        switch (directCallCount) {
+          case 0:
+            assert.equal(0, Date.now(), 'first direct executed right away');
+            break;
+          case 1:
+            assert.isTrue(feedbackExecuted);
+            assert.equal(fakeDirectCost + fakeTransitionCost, Date.now(),
+                         'second direct executed last');
+            done();
+            break;
+        }
+        directCallCount++;
       }));
+
+      elm.dispatchEvent(new CustomEvent('touchmove'));
       window.requestAnimationFrame.yield();
 
       var feedbackExecuted = false;
@@ -175,33 +379,41 @@ suite('DomScheduler >', function() {
       }, elm, true);
       this.subject.feedback(tr, elm, 'transitionend');
 
-      this.subject.direct(fakeDirect(clock, function() {
-        assert.isTrue(feedbackExecuted);
-        assert.equal(fakeDirectCost + fakeTransitionCost, Date.now(),
-                     'second direct block executed last');
-        done();
-      }));
+      elm.dispatchEvent(new CustomEvent('touchmove'));
       window.requestAnimationFrame.yield();
     });
 
     test('should protect direct blocks from mutations', function(done) {
       var clock = this.sinon.clock;
-      this.subject.direct(fakeDirect(clock, function() {
-        assert.equal(0, Date.now(), 'first direct block executed right away');
+      var elm = document.createElement('div');
+
+      var directCallCount = 0;
+      this.subject.attachDirect(elm, 'touchmove', fakeDirect(clock, function() {
+        switch (directCallCount) {
+          case 0:
+            assert.equal(0, Date.now(), 'first direct executed right away');
+            break;
+          case 1:
+            assert.equal(fakeDirectCost, Date.now(),
+                         'second direct executed after');
+            break;
+        }
+        directCallCount++;
       }));
+
+      elm.dispatchEvent(new CustomEvent('touchmove'));
       window.requestAnimationFrame.yield();
 
       this.subject.mutation(fakeMutation(clock, function() {
         assert.equal(fakeDirectCost + directProtectionDuration, Date.now(),
                      'mutation block executed last');
+        assert.equal(directCallCount, 2);
         done();
       }));
 
-      this.subject.direct(fakeDirect(clock, function() {
-        assert.equal(fakeDirectCost, Date.now(),
-                     'second direct block executed after');
-      }));
+      elm.dispatchEvent(new CustomEvent('touchmove'));
       window.requestAnimationFrame.yield();
+
       clock.tick(directProtectionDuration);
     });
 
@@ -235,9 +447,10 @@ suite('DomScheduler >', function() {
       var elm = document.createElement('div');
       var subject = this.subject;
 
-      subject.direct(fakeDirect(clock, function() {
+      subject.attachDirect(elm, 'touchmove', fakeDirect(clock, function() {
         assert.equal(0, Date.now(), 'first direct block executed right away');
       }));
+      elm.dispatchEvent(new CustomEvent('touchmove'));
       window.requestAnimationFrame.yield();
 
       var tr = fakeTransition(clock, function() {
@@ -263,9 +476,10 @@ suite('DomScheduler >', function() {
       var clock = this.sinon.clock;
       var elm = document.createElement('div');
 
-      this.subject.direct(fakeDirect(clock, function() {
+      this.subject.attachDirect(elm, 'scroll', fakeDirect(clock, function() {
         assert.equal(0, Date.now(), 'first direct block executed right away');
       }));
+      elm.dispatchEvent(new CustomEvent('scroll'));
       window.requestAnimationFrame.yield();
 
       this.subject.mutation(fakeMutation(clock, function() {
