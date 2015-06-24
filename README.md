@@ -210,8 +210,8 @@ The `index.html` at the root of this repository is meant for broad device
 and browser testing so we try to keep gecko/webkit/blink compatibility.
 
 A (potentially outdated) version of the demo is usually accessible at
-[http://sgz.fr/ds](http://sgz.fr/ds) and should work on any mobile
-device.
+[http://sgz.fr/ds](http://sgz.fr/ds) and should work on any modern
+browser.
 
 ### Packaged version
 The `demo-app` directory is a certified packaged app where we experiment
