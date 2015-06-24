@@ -79,6 +79,7 @@ To rip all the benefits from the scheduled approach you want
 
 * to _"annotate"_ a maximum of your code, especially the mutations
 * to use the shared scheduler instance (exported as `scheduler`)
+* to use the debug mode (see below)
 
 ## API
 
@@ -182,6 +183,11 @@ Currently the debug mode will warn you about
 
 * Transition block for which we never get an "end" event
 * Direct blocks taking longer than 16ms
+
+We're also using `console.time` / `console.timeEnd` to flag the
+following in the profiler:
+* `animating`, when a feedback or transition is ongoing
+* `protecting`, when a direct protection window is ongoing
 
 You can trun on the debug mode by setting `debug` to `true` in
 `lib/dom-scheduler.js`.
