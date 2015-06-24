@@ -3,6 +3,8 @@
   var headerHeight = 50;
   var maxItemCount = 28;
 
+  var endEvent = ('ontouchstart' in window) ? 'touchend' : 'mouseup';
+
   window.addEventListener('load', function() {
     var listContainer = document.querySelector('section');
 
@@ -70,7 +72,7 @@
     };
 
     var button = document.querySelector('button');
-    button.addEventListener('touchend', function() {
+    button.addEventListener(endEvent, function() {
       Promise.all([toggleTransitioning(), list.toggleEditMode()])
         .then(updateText)
         .then(toggleTransitioning);
