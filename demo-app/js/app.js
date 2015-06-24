@@ -6,13 +6,12 @@
   window.addEventListener('load', function() {
     var listContainer = document.querySelector('section');
 
-    var maestro = new DomScheduler();
     var source = new BaconSource();
-    var list = new ScheduledList(listContainer, source, maestro);
+    var list = new ScheduledList(listContainer, source, scheduler);
     var dialog = document.querySelector('gaia-dialog-alert');
 
     function updateHeader() {
-      return maestro.mutation(function() {
+      return scheduler.mutation(function() {
         var h1 = document.querySelector('h1');
         h1.textContent = 'Main List (' + source.fullLength() + ')';
         h1.scrollTop; // flush
@@ -24,7 +23,7 @@
       var h1After = document.querySelector('#h1-after');
 
       if (h1After.dataset.anim == 'reveal') {
-        maestro.transition(function() {
+        scheduler.transition(function() {
           h1After.dataset.anim = 'hide';
         }, h1After, 'animationend');
       }
@@ -37,7 +36,7 @@
         return;
       }
 
-      maestro.transition(function() {
+      scheduler.transition(function() {
         h1After.dataset.anim = 'reveal';
       }, h1After, 'animationend');
     }
@@ -78,13 +77,13 @@
     });
 
     function updateText(text) {
-      return maestro.mutation(function() {
+      return scheduler.mutation(function() {
         button.textContent = list.editing ? 'Exit' : 'Edit';
       });
     }
 
     function toggleTransitioning() {
-      return maestro.feedback(function() {
+      return scheduler.feedback(function() {
         button.classList.toggle('transitioning');
       }, button, 'transitionend');
     }
@@ -96,7 +95,7 @@
       LazyLoader.load(dependencies, () => {
         var gaiaDialogElements = document.querySelectorAll('gaia-dialog-alert');
         Array.prototype.forEach.call(gaiaDialogElements, elm => {
-            elm.attachBehavior(maestro);
+            elm.attachBehavior(scheduler);
         });
       });
     }
