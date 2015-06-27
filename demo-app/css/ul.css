@@ -3,8 +3,18 @@ ul {
   padding: 0 0 0 0;
   margin: 0;
 
-  /*background: linear-gradient(to top, #bcbcbc 0px, #bcbcbc 1px, white 1px, white);*/
-  /*background-size: 100% 87px;*/
+  background: linear-gradient(to bottom, transparent 0px, transparent 35px, #EDEDED 35px, #EDEDED 80px, transparent 20px),
+              linear-gradient(to bottom, transparent 0px, transparent 10px, #EDEDED 10px, #EDEDED 30px, transparent 20px),
+              linear-gradient(to top, #bcbcbc, #bcbcbc 1px, white 1px, white);
+  background-position: 20% 88px, 5% -88px, 0 -88px;
+  background-size: 90% 88px, 60% 88px, 100% 88px;
+  background-repeat: repeat-y;
+}
+
+ul.reordering {
+  background: linear-gradient(to top, #bcbcbc, #bcbcbc 1px, white 1px, white);
+  background-position: 0 -88px;
+  background-size: 100% 88px;
 }
 
 ul li {
