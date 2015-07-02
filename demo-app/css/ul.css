@@ -3,8 +3,8 @@ ul {
   padding: 0 0 0 0;
   margin: 0;
 
-  background: linear-gradient(to bottom, transparent 0px, transparent 35px, #EDEDED 35px, #EDEDED 80px, transparent 20px),
-              linear-gradient(to bottom, transparent 0px, transparent 10px, #EDEDED 10px, #EDEDED 30px, transparent 20px),
+  background: linear-gradient(to bottom, transparent 0px, transparent 45px, #EDEDED 45px, #EDEDED 70px, transparent 20px),
+              linear-gradient(to bottom, transparent 0px, transparent 15px, #EDEDED 15px, #EDEDED 25px, transparent 20px),
               linear-gradient(to top, #bcbcbc, #bcbcbc 1px, white 1px, white);
   background-position: 20% 88px, 5% -88px, 0 -88px;
   background-size: 90% 88px, 60% 88px, 100% 88px;
