@@ -10,7 +10,6 @@
     }
   }
 
-  // TODO: instantiante and pass this to a list component
   exports.BaconSource = function BaconSource() {
     this.content = [];
 
@@ -21,6 +20,13 @@
 
   exports.BaconSource.prototype = {
     populateItem: function(item, i) {
+      // Simulates the data source not being ready to populate
+      if (parseInt(Date.now() / 10) % 8 === 0) {
+        return new Promise(function(resolve, reject) {
+          setTimeout(resolve, Math.random() * 1000);
+        });
+      }
+
       var title = item.firstChild;
       var body = title.nextSibling;
       var record = this.content[i];

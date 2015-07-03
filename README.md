@@ -196,7 +196,8 @@ You can trun on the debug mode by setting `debug` to `true` in
 ## Demo APP
 To illustrate the benefits of the scheduling approach the project comes
 with a demo app: a **big** re-orderable (virtual) list where new content comes
-in every few seconds.
+in every few seconds. At random, the data source will sometime simulate
+a case where the content isn't ready. And delay populating the content.
 
 The interesting part is of course the _"real life"_ behaviors:
   - when new content comes in while scrolling
