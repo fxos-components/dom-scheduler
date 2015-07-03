@@ -191,6 +191,10 @@ li.dragging .overlay {
   opacity: 0;
 }
 
+li[data-populated=false] {
+  opacity: 0;
+}
+
 section {
   position: absolute;
   top: 50px;
