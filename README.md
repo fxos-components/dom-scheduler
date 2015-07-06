@@ -27,6 +27,20 @@ This project has 2 main goals:
 * _Transition_ / animation
 * _Mutation_
 
+#### What type of operation should I use?
+As a rule of thumb
+
+* anything that takes more than 16ms (including engine work) should be
+  kept out of direct blocks
+* feedback and transitions blocks should mainly contain hardware
+  accelerated CSS transitions/animations
+* in mutation blocks anything goes
+
+Using debug mode with a browser timeline profiler can help you spot
+issues (eg. a feedback block causing a reflow).
+And you can always refer to the excellent
+[CSSTriggers.com](http://csstriggers.com/) while writing new code.
+
 ### What's a typical ideal sequence?
 Let's take a simple example like adding an item at the top of a list. To do
 that smoothly we want to:
