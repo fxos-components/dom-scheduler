@@ -2,6 +2,37 @@ ul {
   list-style: none;
   padding: 0 0 0 0;
   margin: 0;
+}
+
+ul section {
+  margin: 0;
+  padding: 0;
+}
+
+ul h2 {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 0px;
+  margin: 0;
+  padding: 0;
+
+  height: 32px;
+  margin: 0;
+  padding: 0 6px;
+  box-sizing: border-box;
+
+  font-size: 0.9em;
+  line-height: 32px;
+
+  background: #efefef;
+  border-bottom: 1px #bcbcbc solid;
+
+  z-index: 100;
+}
+
+ul .background {
+  position: absolute;
+  width: 100%;
 
   background: linear-gradient(to bottom, transparent 0px, transparent 45px, #EDEDED 45px, #EDEDED 70px, transparent 20px),
               linear-gradient(to bottom, transparent 0px, transparent 15px, #EDEDED 15px, #EDEDED 25px, transparent 20px),
@@ -9,9 +40,11 @@ ul {
   background-position: 20% 88px, 5% -88px, 0 -88px;
   background-size: 90% 88px, 60% 88px, 100% 88px;
   background-repeat: repeat-y;
+
+  z-index: 0;
 }
 
-ul.reordering {
+ul.reordering .background {
   background: linear-gradient(to top, #bcbcbc, #bcbcbc 1px, white 1px, white);
   background-position: 0 -88px;
   background-size: 100% 88px;
@@ -23,6 +56,8 @@ ul li {
   background: white;
   border-bottom: 1px #bcbcbc solid;
   overflow: hidden;
+
+  z-index: 10;
 }
 
 ul li h3 {
