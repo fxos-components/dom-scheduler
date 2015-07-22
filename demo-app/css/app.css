@@ -120,7 +120,6 @@ ul {
   top: 0;
   left: 0;
   width: 100%;
-  overflow: hidden;
 }
 
 ul li {
@@ -195,7 +194,7 @@ li[data-populated=false] {
   opacity: 0;
 }
 
-section {
+body > section {
   position: absolute;
   top: 50px;
   width: 100%;
