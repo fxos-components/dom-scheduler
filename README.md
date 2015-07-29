@@ -233,11 +233,6 @@ browser.
 The `demo-app` directory is a certified packaged app where we experiment
 with web components and other stuffs.
 
-**Before installing it with the WebIDE run:**
-```shell
-git submodule init && git submodule update
-```
-
 ## Tests
 
 1. `$ npm install`
