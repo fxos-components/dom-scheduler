@@ -1,3 +1,0 @@
-[submodule "demo-app/gaia-dialog"]
-   path = demo-app/gaia-dialog
-   url = https://github.com/mancas/dom-scheduler-dialogs

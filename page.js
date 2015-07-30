@@ -20,6 +20,15 @@
     }
     updateHeader();
 
+    function openAlert(evt) {
+      scheduler.mutation(function() {
+        var detail = evt.detail;
+        var li = source.getRecordAt(detail.index);
+        alert(li.title + ' item clicked!');
+      });
+    }
+    list.list.addEventListener('item-selected', openAlert);
+
     function clearNewIndicator() {
       var h1After = document.querySelector('#h1-after');
 

@@ -45,10 +45,12 @@
     listContainer.addEventListener('hidden-new-content', updateNewIndicator);
 
     function openGaiaDialog(evt) {
-      var detail = evt.detail;
-      var li = source.getRecordAt(detail.index);
-      dialog.textContent = li.title + ' item clicked!';
-      dialog.open(detail.clickEvt);
+      scheduler.mutation(function() {
+        var detail = evt.detail;
+        var li = source.getRecordAt(detail.index);
+        dialog.textContent = li.title + ' item clicked!';
+        dialog.open(detail.clickEvt);
+      });
     }
     list.list.addEventListener('item-selected', openGaiaDialog);
 
@@ -89,19 +91,5 @@
         button.classList.toggle('transitioning');
       }, button, 'transitionend');
     }
-
-    var dependencies = ['gaia-dialog/gaia-dialog.js',
-      'gaia-dialog/gaia-dialog-alert.js'];
-
-    function loadDependecies() {
-      LazyLoader.load(dependencies, () => {
-        var gaiaDialogElements = document.querySelectorAll('gaia-dialog-alert');
-        Array.prototype.forEach.call(gaiaDialogElements, elm => {
-            elm.attachBehavior(scheduler);
-        });
-      });
-    }
-
-    loadDependecies();
   });
 })();

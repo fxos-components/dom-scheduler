@@ -8,19 +8,25 @@
     <link rel="stylesheet" href="css/ul.css">
     <link rel="stylesheet" href="css/app.css">
 
-    <!-- GAIA DIALOG -->
-    <link rel="import" type="text/html" href="gaia-dialog/src/gaia-dialog.html">
-    <link rel="stylesheet" type="text/css" href="gaia-dialog/bower_components/base/base.css">
-    <link rel="stylesheet" type="text/css" href="gaia-dialog/bower_components/gaia-theme/gaia-theme.css">
-    <link rel="stylesheet" type="text/css" href="gaia-dialog/bower_components/gaia-fonts/style.css">
+    <!-- Component Style -->
+    <link rel="stylesheet" type="text/css" href="bower_components/base/base.css">
+    <link rel="stylesheet" type="text/css" href="bower_components/gaia-theme/gaia-theme.css">
+    <link rel="stylesheet" type="text/css" href="bower_components/gaia-fonts/style.css">
+    <link rel="stylesheet" type="text/css" href="bower_components/gaia-icons/gaia-icons.css">
 
-    <script type="text/javascript" src="gaia-dialog/js/lazy_loader.js"></script>
-    <!--<script src="gaia-dialog/gaia-dialog.js"></script>
-    <script src="gaia-dialog/gaia-dialog-alert.js"></script>-->
+    <!-- Dependencies -->
+    <script type="text/javascript" src="lib/dom-scheduler.js" defer></script>
+    <script src="bower_components/gaia-component/gaia-component.js" defer></script>
+    <script src="bower_components/gaia-button/gaia-button.js" defer></script>
+    <script src="bower_components/gaia-text-input/gaia-text-input.js" defer></script>
 
-    <script type="text/javascript" src="lib/dom-scheduler.js" async></script>
+
+    <!-- Libs -->
+    <script src="bower_components/gaia-dialog/gaia-dialog.js" defer></script>
+    <script src="bower_components/gaia-dialog/gaia-dialog-alert.js" defer></script>
     <script type="text/javascript" src="lib/scheduled-list.js" async></script>
 
+    <!-- App -->
     <script type="text/javascript" src="js/bacon-source.js" async></script>
     <script type="text/javascript" src="js/app.js" async></script>
 
@@ -51,7 +57,7 @@
       </ul>
     </section>
 
-    <gaia-dialog-alert>List item clicked!</gaia-dialog-alert>
+    <gaia-dialog-alert id="mine">List item clicked!</gaia-dialog-alert>
   </body>
 
 </html>
