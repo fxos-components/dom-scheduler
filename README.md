@@ -90,7 +90,7 @@ Promise.all([reflectChangeWithTransitions(), persistChange()])
 * `cleanUp` is a scheduled mutation
 
 ## Adopting the scheduler
-To rip all the benefits from the scheduled approach you want
+To reap all the benefits from the scheduled approach you want
 
 * to _"annotate"_ a maximum of your code, especially the mutations
 * to use the shared scheduler instance (exported as `scheduler`)
