@@ -1,0 +1,24 @@
+{
+  "name": "fast-list",
+  "version": "0.1.0",
+  "homepage": "https://github.com/gaia-components/fast-list",
+  "authors": [
+    "Etienne Segonzac <etienne@segonzac.info>"
+  ],
+  "description": "No, really.",
+  "main": "lib/scheduled-list.js",
+  "keywords": [
+    "web",
+    "performance",
+    "virtual",
+    "list"
+  ],
+  "license": "MPL",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

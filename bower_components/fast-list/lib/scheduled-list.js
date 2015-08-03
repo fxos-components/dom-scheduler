@@ -47,7 +47,7 @@
 
     if (debug) {
       if (this.geometry.itemHeight !== source.itemHeight()) {
-        log('Template height and source height are not the same.')
+        log('Template height and source height are not the same.');
       }
     }
 
@@ -113,7 +113,7 @@
         geo.forward = false;
       }
 
-      if (geo.topPosition == 0 && this._previousTop !== 0) {
+      if (geo.topPosition === 0 && this._previousTop !== 0) {
         this.container.dispatchEvent(new CustomEvent('top-reached'));
       }
 
@@ -138,7 +138,6 @@
       var source = this.source;
       var items = this._items;
       var itemsInDOM = this._itemsInDOM;
-      var editing = this.editing;
       var geo = this.geometry;
       var template = this._template;
       var list = this.list;
@@ -175,7 +174,7 @@
           return;
         }
 
-        items[i] = item;
+        items[index] = item;
         return item;
       };
 
@@ -198,8 +197,8 @@
           renderItem(i);
         }
       } else {
-        for (var i = endIndex; i >= startIndex; --i) {
-          renderItem(i);
+        for (var j = endIndex; j >= startIndex; --j) {
+          renderItem(j);
         }
       }
 
@@ -250,8 +249,8 @@
       return this.scheduler.mutation(function() {
         var nodes = list.querySelectorAll('section');
         for (var i = 0; i < nodes.length; i++) {
-          var sectionNode = nodes[i];
-          sectionNode.remove();
+          var toRemove = nodes[i];
+          toRemove.remove();
         }
 
         var headerHeight = source.sectionHeaderHeight();
@@ -415,7 +414,7 @@
 
         items.splice(index, 1);
         items.splice(newIndex, 0, li);
-        var c = source.removeAtIndex(index)
+        var c = source.removeAtIndex(index);
         source.insertAtIndex(newIndex, c, section);
 
         itemsInDOM.forEach(function(item) {
@@ -443,14 +442,15 @@
         return;
       }
 
-      if (this.geometry.topPosition > this.geometry.itemHeight || this.editing) {
+      if (this.geometry.topPosition > this.geometry.itemHeight ||
+          this.editing) {
         // No transition needed, just keep the scroll position
         this._insertOnTop(true);
         return;
       }
 
       var domItems = this._itemsInDOM;
-      var list = this.list
+      var list = this.list;
 
       list.classList.add('reordering');
       pushDown(this.scheduler, domItems, this.geometry)
@@ -562,7 +562,7 @@
         str += '|';
       }
     }
-    log(str)
+    log(str);
   }
 
   function computeIndices(source, geometry) {
@@ -570,7 +570,8 @@
     var criticalEnd = source.indexAtPosition(geometry.topPosition +
                                              geometry.viewportHeight);
 
-    var canPrerender = geometry.maxItemCount - (criticalEnd - criticalStart) - 1;
+    var canPrerender = geometry.maxItemCount -
+                       (criticalEnd - criticalStart) - 1;
     var before = geometry.switchWindow;
     var after = canPrerender - before;
     var lastIndex = source.fullLength() - 1;
@@ -731,7 +732,7 @@
         item.style.webkitTransition = '';
         resetTransform(item);
       }
-      item.scrollTop; // flushing
+      domItems[0] && domItems[0].scrollTop; // flushing
     });
   }
 
@@ -740,19 +741,19 @@
       return Promise.resolve();
     }
 
-    return scheduler.feedback((function() {
+    return scheduler.feedback(function() {
       for (var i = 0; i < domItems.length; i++) {
         var item = domItems[i];
         var overlay = item.querySelector('.overlay');
         overlay.dataset.anim = editing ? 'reveal' : 'hide';
         item.classList.toggle('edit', editing);
       }
-    }).bind(this), list, 'animationend');
+    }, list, 'animationend');
   }
 
   function setupForDragging(scheduler, item, on) {
     return scheduler.mutation(function() {
-      item.parentNode.classList.toggle('reordering', on)
+      item.parentNode.classList.toggle('reordering', on);
       item.style.zIndex = on ? '1000' : '';
       item.style.boxShadow = on ? '0 0 3px 1px #bcbcbc' : '';
     });
@@ -769,8 +770,6 @@
     if (!context.item) {
       return;
     }
-
-    var itemHeight = geometry.itemHeight;
 
     var draggedItem = context.item;
     var draggedOriginal = parseInt(draggedItem.dataset.position);
