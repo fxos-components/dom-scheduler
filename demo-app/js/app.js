@@ -9,7 +9,7 @@
     var listContainer = document.querySelector('section');
 
     var source = new BaconSource();
-    var list = new ScheduledList(listContainer, source, scheduler);
+    var list = new FastList(listContainer, source);
     var dialog = document.querySelector('gaia-dialog-alert');
 
     function updateHeader() {
