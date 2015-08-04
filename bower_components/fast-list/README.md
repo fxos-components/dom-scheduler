@@ -1,20 +1,25 @@
-# Scheduled List
+# Fast List
+[![](https://travis-ci.org/gaia-components/fast-list.svg)](https://travis-ci.org/gaia-components/fast-list)
 
-The ScheduledList is a virtual list implementation based on the DomScheduler.
-It currently lives in `lib/scheduled-list.js`.
+The FastList is a virtual-list implementation based on the DomScheduler.
+It currently lives in `fast-list.js`.
 
-The content of the list comes from a `DataSource` that needs to implement the API described 
+The content of the list comes from a `DataSource` that needs to implement the API described
 below. When the content is edited from the list "Edit mode", the list will trigger calls to the source itself.
-But there's no observation going on so if the content changes for other reasons the list needs to be made aware of that.
+
+But there's no observation going on, so if the content changes for other reasons the list needs to be made aware of that.
 
 ## List API
 ### Constructor
-```javascript
-new ScheduledList(container, source, scheduler);
+
+```js
+new FastList(container, source);
 ```
 
 #### Container
+
 Here's a container example
+
 ```html
     <section>
       <ul>
@@ -28,47 +33,47 @@ Here's a container example
     </section>
 ```
 It should contain:
-* An `ul` element where the list will be rendered, the `height` of this element will be set to the full height of the list so the container should `overflow:scroll`
+* A `ul` element where the list will be rendered, the `height` of this element will be set to the full height of the list so the container should `overflow: scroll`
 * A `template`, which is the DOM node that will be duplicated for every item in the list.
 
 For performance reasons it's important to be mindful of useless `TextNodes` that might be created as part of the template, hence the weird line returns.
 
 ### Edit mode
-```javascript
+```js
 list.toggleEditMode()
 ```
 This method returns a promise, fulfilled once the transition is done.
 
 ### Notifying of new content insertion
-```javascript
+```js
 list.insertedAtIndex(0);
 ```
 To insert with a nice transition.
 
-```javascript
+```js
 list.reloadData()
 ```
 For bigger, instantaneous changes.
 
 ### Scrolling
-```javascript
+```js
 list.scrollTop
 ```
 Will give you the *cached* scroll top position (not causing a reflow).
 
-```javascript
+```js
 list.scrollInstantly(by)
 ```
 Will do as it says.
 
-```javascript
+```js
 list.updateListHeight()
 ```
 Can be called if the number of items in the list has changed, it'll return a scheduler promise fulfilled after the mutation is executed. This will also cause the scrollbar to flash.
 
 ## Data Source API
 ### Filling up the list items
-```javascript
+```js
 populateItem: function(item, i)
 ```
 * `item` is a DOM node formatted like the template
@@ -121,33 +126,33 @@ getRecortAd: function(i)
 Returns the raw data for this item.
 
 ### Geometry
-```javascript
+```js
 indexAtPosition: function(pos)
 ```
 Should return the record index that needs to be displayed at the `pos` position.
 
-```javascript
+```js
 positionForIndex: function()
 ```
 The oposite :)
 
-```javascript
+```js
 fullLength: function()
 ```
 The total number of items in the list.
 
-```javascript
+```js
 itemHeight: function()
 ```
 The height of an item in the list, in pixels. Should match the height of the template.
 
-```javascript
+```js
 fullHeight: function()
 ```
 The total height of the list in pixels.
 
 ### Edition support
-```javascript
+```js
 insertAtIndex: function(index, record, sectionHint)
 ```
 _The sectionHint is only needed when inserting at the very beginning or end of a section._

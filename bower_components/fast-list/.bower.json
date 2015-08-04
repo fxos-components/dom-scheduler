@@ -1,12 +1,13 @@
 {
   "name": "fast-list",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "homepage": "https://github.com/gaia-components/fast-list",
   "authors": [
-    "Etienne Segonzac <etienne@segonzac.info>"
+    "Etienne Segonzac <etienne@segonzac.info>",
+    "Wilson Page <wilsonpage@me.com>"
   ],
   "description": "No, really.",
-  "main": "lib/scheduled-list.js",
+  "main": "fast-list.js",
   "keywords": [
     "web",
     "performance",
@@ -21,14 +22,13 @@
     "test",
     "tests"
   ],
-  "_release": "0.1.0",
+  "_release": "0.1.2",
   "_resolution": {
     "type": "version",
-    "tag": "v0.1.0",
-    "commit": "1f6d462a85e357e28732a842a915e87ba556c7aa"
+    "tag": "v0.1.2",
+    "commit": "cd1bf47421d1d0481f128b87cb90195f6762d400"
   },
   "_source": "git://github.com/gaia-components/fast-list.git",
   "_target": "~0.1.0",
-  "_originalSource": "gaia-components/fast-list",
-  "_direct": true
+  "_originalSource": "gaia-components/fast-list"
 }

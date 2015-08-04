@@ -1,7 +1,7 @@
 (function() {
-  var debug = false;
-  var headerHeight = 50;
-  var maxItemCount = 28;
+  /*global BaconSource, FastList*/
+
+  'use strict';
 
   var endEvent = ('ontouchstart' in window) ? 'touchend' : 'mouseup';
 
@@ -9,8 +9,8 @@
     var listContainer = document.querySelector('section');
 
     var source = new BaconSource();
-    var list = new ScheduledList(listContainer, source, scheduler);
-    var dialog = document.querySelector('gaia-dialog-alert');
+    var list = new FastList(listContainer, source);
+    var scheduler = FastList.scheduler;
 
     function updateHeader() {
       return scheduler.mutation(function() {
@@ -20,6 +20,15 @@
       });
     }
     updateHeader();
+
+    function openAlert(evt) {
+      scheduler.mutation(function() {
+        var detail = evt.detail;
+        var li = source.getRecordAt(detail.index);
+        alert(li.title + ' item clicked!');
+      });
+    }
+    list.list.addEventListener('item-selected', openAlert);
 
     function clearNewIndicator() {
       var h1After = document.querySelector('#h1-after');
@@ -43,16 +52,6 @@
       }, h1After, 'animationend');
     }
     listContainer.addEventListener('hidden-new-content', updateNewIndicator);
-
-    function openGaiaDialog(evt) {
-      scheduler.mutation(function() {
-        var detail = evt.detail;
-        var li = source.getRecordAt(detail.index);
-        dialog.textContent = li.title + ' item clicked!';
-        dialog.open(detail.clickEvt);
-      });
-    }
-    list.list.addEventListener('item-selected', openGaiaDialog);
 
     function newContentHandler() {
       var newContent = {

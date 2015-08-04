@@ -1,6 +1,6 @@
 {
   "name": "fast-list",
-  "main": "lib/scheduled-list.js",
+  "main": "fast-list.js",
   "devDependencies": {
     "jshint": "^2.7.0",
     "karma": "^0.12.31",
