@@ -272,6 +272,15 @@ suite('DomScheduler >', function() {
           done();
         });
     });
+
+    test('it always executes the task async', function() {
+      var spy = this.sinon.spy();
+      this.subject.mutation(spy);
+      sinon.assert.notCalled(spy);
+      return Promise.resolve().then(function() {
+        sinon.assert.called(spy);
+      });
+    });
   });
 
   suite('Scheduling >', function() {
