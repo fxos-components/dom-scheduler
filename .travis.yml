@@ -3,8 +3,14 @@ language: node_js
 node_js:
   - '0.10'
 
+addons:
+  firefox: '40.0.2'
+
 before_install:
-  - export CHROME_BIN=chromium-browser
+  - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+  - sudo apt-get install libappindicator1 fonts-liberation
+  - sudo dpkg -i google-chrome-*.deb
+  - export CHROME_BIN=`which google-chrome`
 
 install:
   - npm install
