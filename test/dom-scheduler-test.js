@@ -68,6 +68,20 @@ suite('DomScheduler >', function() {
         sinon.assert.calledWith(addEventSpy, 'touchmove', this.subject);
       });
 
+      test('should add one event listener for each element', function() {
+        var el1 = document.createElement('div');
+        var el2 = document.createElement('div');
+
+        this.sinon.spy(el1, 'addEventListener');
+        this.sinon.spy(el2, 'addEventListener');
+
+        this.subject.attachDirect(el1, 'touchmove', this.sinon.spy());
+        this.subject.attachDirect(el2, 'touchmove', this.sinon.spy());
+
+        sinon.assert.calledOnce(el1.addEventListener);
+        sinon.assert.calledOnce(el2.addEventListener);
+      });
+
       test('should be scheduled inside a requestAnimationFrame', function() {
         var elm = document.createElement('div');
         var spy = this.sinon.spy();
