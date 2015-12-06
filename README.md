@@ -1,5 +1,5 @@
 # Dom Scheduler
-[![](https://travis-ci.org/etiennesegonzac/dom-scheduler.svg)](https://travis-ci.org/etiennesegonzac/dom-scheduler)
+[![](https://travis-ci.org/fxos-components/dom-scheduler.svg)](https://travis-ci.org/fxos-components/dom-scheduler)
 
 ## Concept
 The DOM is pretty fast, layout is pretty fast, CSS transitions are

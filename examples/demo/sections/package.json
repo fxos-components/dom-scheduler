@@ -1,0 +1,15 @@
+{
+  "name": "demo",
+  "version": "1.0.0",
+  "description": "dom-scheduler demo",
+  "main": "index.html",
+  "license": "ISC",
+  "dependencies": {
+    "fastlist": "^1.0.2",
+    "fxos-dialog": "^2.0.1",
+    "fxos-font": "^1.0.0",
+    "fxos-icons": "^2.0.0",
+    "fxos-theme": "^2.0.0",
+    "popel": "^1.0.2"
+  }
+}

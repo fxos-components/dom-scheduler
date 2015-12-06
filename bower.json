@@ -1,11 +1,11 @@
 {
   "name": "dom-scheduler",
-  "homepage": "https://github.com/etiennesegonzac/dom-scheduler",
+  "homepage": "https://github.com/fxos-components/dom-scheduler",
   "authors": [
     "Etienne Segonzac <etienne@segonzac.info>"
   ],
   "description": "Making the performant thing the easy thing.",
-  "main": "lib/dom-scheduler.js",
+  "main": "dom-scheduler.js",
   "keywords": [
     "web",
     "performance",
@@ -17,8 +17,7 @@
   "ignore": [
     "**/.*",
     "node_modules",
-    "demo-app/bower_components",
-    "test",
-    "tests"
+    "examples",
+    "test"
   ]
 }
