@@ -1,24 +1,25 @@
 {
   "name": "dom-scheduler",
-  "main": "lib/dom-scheduler.js",
+  "main": "dom-scheduler.js",
   "devDependencies": {
-    "jshint": "^2.7.0",
-    "karma": "^0.12.31",
+    "jshint": "^2.9.1-rc1",
+    "karma": "^0.13.15",
+    "karma-chrome-launcher": "^0.2.2",
     "karma-firefox-launcher": "^0.1.4",
-    "karma-chrome-launcher": "^0.1.4",
-    "karma-mocha": "^0.1.10",
-    "karma-sinon-chai": "^0.3.0"
+    "karma-mocha": "^0.2.1",
+    "karma-sinon-chai": "^0.3.0",
+    "mocha": "^2.3.4"
   },
   "scripts": {
-    "lint": "./node_modules/jshint/bin/jshint lib/dom-scheduler.js test/*.js",
-    "test": "./node_modules/karma/bin/karma start test/karma.conf --single-run",
-    "test-dev": "./node_modules/karma/bin/karma start test/karma.conf"
+    "lint": "jshint dom-scheduler.js",
+    "test": "karma start test/karma.conf.js --single-run",
+    "test-dev": "karma start test/karma.conf.js"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/etiennesegonzac/dom-scheduler.git"
+    "url": "git://github.com/fxos-components/dom-scheduler.git"
   },
   "bugs": {
-    "url": "https://github.com/etiennesegonzac/dom-scheduler/issues"
+    "url": "https://github.com/fxos-components/dom-scheduler/issues"
   }
 }
