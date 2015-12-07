@@ -21,5 +21,6 @@
   },
   "bugs": {
     "url": "https://github.com/fxos-components/dom-scheduler/issues"
-  }
+  },
+  "version": "2.0.0"
 }
