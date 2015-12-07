@@ -1,58 +1,56 @@
-# Dom Scheduler
-[![](https://travis-ci.org/fxos-components/dom-scheduler.svg)](https://travis-ci.org/fxos-components/dom-scheduler)
+# dom-scheduler [![](https://travis-ci.org/fxos-components/dom-scheduler.svg)](https://travis-ci.org/fxos-components/dom-scheduler)
+
+The DOM is fast, layout is fast, CSS transitions are smooth; but doing any at the same time can cause nasty performance glitches. This explains why it's easy to demo a 60fps transition, but larger apps are often janky.
+
+`dom-scheduler` helps express the types of operation you're doing, and in which order. Under the hood `dom-scheduler` ensures everything happens with the **best perceived performance**.
+
+## Installation
+
+```bash
+$ npm install dom-scheduler
+```
+
+## Usage
+
+```html
+<script src="node_modules/dom-scheduler/dom-scheduler.js"></script>
+```
 
 ## Concept
-The DOM is pretty fast, layout is pretty fast, CSS transitions are
-smooth... but doing any two of them at the same time can quickly cause
-nasty performance glitches.
 
-This explains why it's easy to demo a 60fps transition on a web app but
-real-world usage is usually full of frame drops and other issues.
+This project has **2 main goals**:
 
-The **DomScheduler** is not an abstraction. It's a little helper making it
-easy to express what type of operations you're doing, in which order. The
-Scheduler then takes care of making sure everything happens with the
-best perceived performance.
+- Preventing trivial DOM changes in some unrelated part of your code from ruining a transition.
+- Enabling developers to easily express the ideal sequence for a change happening in phases (with Promise chains).
 
-This project has 2 main goals:
+### Operations types by priority
 
-  - Preventing trivial DOM changes in some unrelated part of your code from
-    ruining a transition.
-  - Enabling developers to easily express the ideal sequence for a
-    change happening in phases (with Promise chains).
-
-### Operations types by priotity
-* _Direct_ manipulation
-* Instant _feedback_
-* _Transition_ / animation
-* _Mutation_
+- `scheduler.attachDirect()` - Responding to long interactions
+- `scheduler.feedback()` - Showing feedback to quick interaction
+- `scheduler.transition()` - Animations/transitions
+- `scheduler.mutation()` - Mutating the DOM
 
 #### What type of operation should I use?
+
 As a rule of thumb
 
-* anything that takes more than 16ms (including engine work) should be
-  kept out of direct blocks
-* feedback and transitions blocks should mainly contain hardware
-  accelerated CSS transitions/animations
-* in mutation blocks anything goes
+- Anything that takes more than 16ms (including engine work) should be kept out of direct blocks
+- `.feedback()` and `.transition()` blocks should mainly contain hardware accelerated CSS transitions/animations
+- In mutation blocks, anything goes
 
-Using debug mode with a browser timeline profiler can help you spot
-issues (eg. a feedback block causing a reflow).
-And you can always refer to the excellent
-[CSSTriggers.com](http://csstriggers.com/) while writing new code.
+Using debug mode with a browser timeline profiler can help you spot issues (eg. a feedback block causing a reflow). You can always refer to the excellent [csstriggers.com](http://csstriggers.com/) while writing new code.
 
 ### What's a typical ideal sequence?
-Let's take a simple example like adding an item at the top of a list. To do
-that smoothly we want to:
 
-  - **[transition]** push everything down to make room for the new item
-  - **[mutation]** insert the new item into the DOM but outside of the
-    viewport (so the item doesn't flash on screen)
-  - **[transition]** slide the new item in the viewport
+Let's take a simple example like adding an item at the top of a list. To do that smoothly we want to:
 
-Usually this means
+- `.transition()` everything down to make room for the new item
+- `.mutation()` to insert the new item into the DOM (outside of the viewport, so the item doesn't flash on screen)
+- `.transition()` the new item in the viewport
 
-```javascript
+Without `dom-scheduler` this means:
+
+```js
 setupTransitionOnElements();
 container.addEventListener('transitionend', function trWait() {
   container.removeEventListener('transitionend');
@@ -65,75 +63,80 @@ container.addEventListener('transitionend', function trWait() {
 });
 ```
 
-But of course we'd rather use promises to express this kind of sequence
-like
+But we'd rather use promises to express this kind of sequence:
 
-```javascript
-  pushDown(elements)
-    .then(insertInDocument)
-    .then(slideIn)
-    .then(cleanUp)
+```js
+pushDown(elements)
+  .then(insertInDocument)
+  .then(slideIn)
+  .then(cleanUp)
 ```
 
 Another badass sequence, using a promise-based storage system might be
 something like
 
-```javascript
+```js
 Promise.all([reflectChangeWithTransitions(), persistChange()])
   .then(reflectChangeInDocument)
   .then(cleanUp)
 ```
 
-* `reflectChangeWithTransition()` is a scheduled transition
-* `persitChange()` is your backend call
-* `reflectChangeInDocument` is a scheduled mutation
-* `cleanUp` is a scheduled mutation
+- `reflectChangeWithTransition()` is a scheduled transition
+- `persitChange()` is your backend call
+- `reflectChangeInDocument` is a scheduled mutation
+- `cleanUp` is a scheduled mutation
 
-## Adopting the scheduler
-To reap all the benefits from the scheduled approach you want
+## Adopting dom-scheduler
 
-* to _"annotate"_ a maximum of your code, especially the mutations
-* to use the shared scheduler instance (exported as `scheduler`)
-* to use the debug mode (see below)
+To reap all the benefits from the scheduled approach you want to
+
+- _"annotate"_ a maximum of your code, especially the mutations
+- use the shared scheduler instance (exported as `scheduler`)
+- use the debug mode (see below)
 
 ## API
 
-### Direct blocks
+### scheduler.attachDirect()
 
 Direct blocks should be used for direct manipulation (touchevents,
-scrollevents...). As such they have the highest priority.
+scrollevents...). As such they have the **highest priority**.
 
-You _"attach"_ a direct block to a specific event.
-The scheduler takes care of adding and removing event listeners.
-The event object will be passed to the `block` as the first parameter.
+You _"attach"_ a direct block to a specific event. The scheduler takes care of adding and removing event listeners. The event object will be passed to the `block` as the first parameter.
 
 #### Attaching a handler
-`scheduler.attachDirect(elm, evt, block)`
+
+```js
+scheduler.attachDirect(elm, evt, block)
+```
 
 #### Detaching a handler
-`scheduler.detachDirect(elm, evt, block)`
+
+```js
+scheduler.detachDirect(elm, evt, block)
+```
 
 #### Example
-```javascript
-scheduler.attachDirect(el, 'touchmove', (evt) => {
+
+```js
+scheduler.attachDirect(el, 'touchmove', evt => {
   el.style.transform = computeTransform(evt);
 });
 ```
 
-### Feedback blocks
-`scheduler.feedback(block, elm, evt, timeout)`
+### scheduler.feedback()
 
-Feedback blocks should be used to encapsulate CSS
-transitions/animations triggered in direct response to a user interaction.
-eg. button pressed state
+```js
+scheduler.feedback(block, elm, evt, timeout)
+```
 
-They will be protected from DOM mutations to perform smoothly and they
-return a promise fulfilled once `evt` is received on `elm` or after `timeout`ms.
+Feedback blocks should be used to encapsulate CSS transitions/animations triggered in direct response to a user interaction (eg. button pressed state).
 
-The block will have the same priority than a _direct_ manipulation block.
+They will be protected from `scheduler.mutation()`s to perform smoothly and
+return a promise, fulfilled once `evt` is received on `elm` or after `timeout`ms.
 
-#### Example
-```javascript
+The `scheduler.feedback()` has the same priority as `scheduler.attachDirect()`.
+
+```js
 scheduler.feedback(() => {
   el.classList.add('pressed');
 }, el, 'transitionend').then(() => {
@@ -141,16 +144,15 @@ scheduler.feedback(() => {
 });
 ```
 
-### Transition blocks
-`scheduler.transition(block, elm, evt, timeout)`
+### scheduler.transition()
 
-Transitions blocks should be used to encapsulate CSS
-transitions/animations.
-They will be protected from DOM mutations to perform smoothly and they
-return a promise fulfilled once `evt` is received on `elm` or after `timeout`ms.
+```js
+scheduler.transition(block, elm, evt, timeout);
+```
 
-#### Example
-```javascript
+`scheduler.transition()` should be used to protect CSS transitions/animations. When in progress they prevent any scheduled `scheduler.mutation()` tasks running to maintain a smooth framerate. They return a promise, fulfilled once `evt` is received on `elm` or after `timeout`ms.
+
+```js
 scheduler.transition(() => {
   el.style.transition = 'transform 0.25s ease';
   el.classList.remove('new');
@@ -159,79 +161,68 @@ scheduler.transition(() => {
 });
 ```
 
+### scheduler.mutation()
 
-### Mutation blocks
-`scheduler.mutation(block)`
+```js
+scheduler.mutation(block);
+```
 
-Mutations blocks should be used to write to the DOM or perform actions
-requiring the layout to be computed.
+Mutations blocks should be used to write to the DOM or perform actions requiring layout to be computed.
 
-**We shoud always aim for the document to be (almost) visually identical
-_before_ and _after_ a mutation block.
-Any big change in layout/size will cause a flash/jump.**
+**We shoud always aim for the document to be (almost) visually identical _before_ and _after_ a mutation block. Any big change in layout/size will cause a flash/jump.**
 
-Mutation blocks might be delayed (eg. during a transition) and they
-return a promise fullfilled once the block is executed for chaining.
+`scheduler.mutation()` blocks might be delayed (eg. when a `scheduler.transition()` is in progress). They return a promise, fullfilled once the task is eventually executed; this also allows chaining.
 
-#### Example
-```javascript
-maestro.mutation(() => {
+```js
+scheduler.mutation(() => {
   el.textContent = 'Main List (' + items.length + ')';
 });
 ```
 
 ## Scheduling heuristics (TBD)
-  - `direct` blocks are encapsulated into `requestAnimationFrame`
-  - `direct` blocks and `feedback transition` blocks have the highest
-    priority and delay the rest
-  - `transition` delays mutations
-  - transitions are postponed while delayed mutations are being flushed
-  - when both `transition`s and `mutation`s are queued because of direct
-    manipulation, `transition`s are flushed first
+  - `.direct()` blocks are called inside `requestAnimationFrame`
+  - `.attachDirect()` and `.feedback()` blocks have the highest priority and delay the rest.
+  - `.transition()` delays executuon of `.mutation()` tasks.
+  - `.transition()`s are postponed while delayed `mutation()`s are being flushed
+  - When both `.transition()`s and `.mutation()`s are queued because of `.attachDirect()`
+    manipulation, `.transition()`s are run first
 
 ## Debug mode
-While it can have a negative impact on performance, it's recommended to
-turn the debug mode on from time to time during development to catch
-frequent mistakes early on.
+
+While it can have a negative impact on performance, it's recommended to turn the debug mode on from time to time during development to catch frequent mistakes early on.
 
 Currently the debug mode will warn you about
 
-* Transition block for which we never get an "end" event
-* Direct blocks taking longer than 16ms
+- Transition block for which we never get an "end" event
+- Direct blocks taking longer than 16ms
 
 We're also using `console.time` / `console.timeEnd` to flag the
 following in the profiler:
-* `animating`, when a feedback or transition is ongoing
-* `protecting`, when a direct protection window is ongoing
+- `animating`, when a feedback or transition is ongoing
+- `protecting`, when a direct protection window is ongoing
 
-You can trun on the debug mode by setting `debug` to `true` in
-`lib/dom-scheduler.js`.
+You can turn on the debug mode by setting `debug` to `true` in [`dom-scheduler.js`](dom-scheduler.js).
 
 ## Demo APP
-To illustrate the benefits of the scheduling approach the project comes
-with a demo app: a **big** re-orderable (virtual) list where new content comes
-in every few seconds. At random, the data source will sometime simulate
-a case where the content isn't ready. And delay populating the content.
+
+To illustrate the benefits of the scheduling approach the project comes with a demo app: a **big** re-orderable (virtual) list where new content comes in every few seconds. At random, the data source will sometime simulate a case where the content isn't ready. And delay populating the content.
 
 The interesting part is of course the _"real life"_ behaviors:
   - when new content comes in while scrolling
   - when the edit mode is toggled while the system is busy scrolling
   - when anything happens during a re-order manipulation
 
-_(You can turn on the `naive` flag in `lib/dom-scheduler.js` to disable
-scheduling and compare.)_
+_(You can turn on the `naive` flag in [`dom-scheduler.js`](dom-scheduler.js) to disable scheduling and compare.)_
 
 ### Web page version
-The `index.html` at the root of this repository is meant for broad device
-and browser testing so we try to keep gecko/webkit/blink compatibility.
 
-A (potentially outdated) version of the demo is usually accessible at
-[http://sgz.fr/ds](http://sgz.fr/ds) and should work on any modern
-browser.
+The `index.html` at the root of this repository is meant for broad device and browser testing so we try to keep gecko/webkit/blink compatibility.
+
+A (potentially outdated) version of the demo is usually accessible at [http://sgz.fr/ds](http://sgz.fr/ds) and should work on any modern browser.
 
 ### Packaged version
-The `demo-app` directory is a certified packaged app where we experiment
-with web components and other stuffs.
+
+The `examples/demo` is a 'certified' packaged-app where we experiment with web components and other stuff.
 
 ## Tests
 
