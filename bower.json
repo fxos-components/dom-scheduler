@@ -5,6 +5,7 @@
     "Etienne Segonzac <etienne@segonzac.info>"
   ],
   "description": "Making the performant thing the easy thing.",
+  "version": "2.1.0",
   "main": "dom-scheduler.js",
   "keywords": [
     "web",

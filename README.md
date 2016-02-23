@@ -173,6 +173,8 @@ Mutations blocks should be used to write to the DOM or perform actions requiring
 
 `scheduler.mutation()` blocks might be delayed (eg. when a `scheduler.transition()` is in progress). They return a promise, fullfilled once the task is eventually executed; this also allows chaining.
 
+When used for measurement (eg. `getBoundingClientRect()`) a block can `return` a result that will be propagated through the promise chain.
+
 ```js
 scheduler.mutation(() => {
   el.textContent = 'Main List (' + items.length + ')';
