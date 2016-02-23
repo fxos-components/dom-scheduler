@@ -317,13 +317,13 @@
           .map(function(obj) { return obj.resolve; });
 
       var mutations = this._pendingMutations;
-      mutations.forEach(function(mutation) {
-        mutation.block();
+      var results = mutations.map(function(mutation) {
+        return mutation.block();
       });
       this._pendingMutations = [];
       this._flushing = false;
 
-      fulfilments.forEach(function(resolve) { resolve(); });
+      fulfilments.forEach(function(resolve, i) { resolve(results[i]); });
 
       this._dequeueTransitions();
     }

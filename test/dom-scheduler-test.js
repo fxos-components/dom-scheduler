@@ -295,6 +295,34 @@ suite('DomScheduler >', function() {
         sinon.assert.called(spy);
       });
     });
+
+    test('are able to return a value', function(done) {
+      this.subject.mutation(() => {
+        return 42;
+      }).then(function(res) {
+        assert.equal(res, 42);
+        done();
+      });
+    });
+
+    test('are able to return a value even when delayed', function(done) {
+      // Scheduling a transition
+      var elm = document.createElement('div');
+      var spy = this.sinon.spy();
+      var transition = fakeTransition(this.sinon.clock, spy, elm, true);
+      this.subject.transition(transition, elm, 'transitionend');
+
+      // then a mutation
+      this.subject.mutation(() => {
+        sinon.assert.calledOnce(spy);
+        return 42;
+      }).then(function(res) {
+        assert.equal(res, 42);
+        done();
+      });
+
+      this.sinon.clock.tick(fakeTransitionDuration);
+    });
   });
 
   suite('Scheduling >', function() {
